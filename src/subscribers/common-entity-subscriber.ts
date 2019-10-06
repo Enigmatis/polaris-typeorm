@@ -10,9 +10,11 @@ export class CommonEntitySubscriber implements EntitySubscriberInterface<CommonM
 
     async beforeInsert(event: InsertEvent<CommonModel>) {
         await CommonEntitySubscriber.updateDataVersionInEntity(event);
+        await CommonEntitySubscriber.setRealityForEntity(event);
     }
 
     async beforeUpdate(event: UpdateEvent<CommonModel>) {
+        await CommonEntitySubscriber.validateReality(event)
         await CommonEntitySubscriber.updateDataVersionInEntity(event);
     }
 
@@ -37,7 +39,28 @@ export class CommonEntitySubscriber implements EntitySubscriberInterface<CommonM
                 logger ? logger.debug('data version is incremented and holds new value ' + polarisContext.globalDataVersion) : {};
             }
         }
+
         event.entity.dataVersion = polarisContext.globalDataVersion;
         logger ? logger.debug('Finished data version job when inserting/updating entity') : {};
+    }
+
+    private static setRealityForEntity(event: InsertEvent<CommonModel>) {
+        let polarisContext = event.queryRunner.data.context;
+        if (!polarisContext) return;
+        let logger = polarisContext.logger;
+        logger ? logger.debug("Started setting reality of id '" + polarisContext.realityId + "' for entity") : {};
+        event.entity.realityId = polarisContext.realityId || 0;
+        logger ? logger.debug("Finished setting reality of id '" + polarisContext.realityId + "' for entity") : {};
+    }
+
+    private static async validateReality(event: UpdateEvent<CommonModel>) {
+        let polarisContext = event.queryRunner.data.context;
+        if(!polarisContext) return ;
+        let logger = polarisContext.logger;
+
+        if (polarisContext.realityId !== event.entity.realityId){
+            logger ? logger.debug("Tried to update entity from reality: " + event.entity.realityId + " with reality: " + polarisContext.realityId) : {};
+            throw new Error("Can't update entity from different reality")
+        }
     }
 }
