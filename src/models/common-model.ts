@@ -7,8 +7,8 @@ export abstract class CommonModel {
     @Column()
     dataVersion: number;
 
-    @Column({update:false})
-    final realityId: number = 0;
+    @Column()
+    realityId: number = 0;
 
     @Column({nullable: true})
     createdBy: string;

@@ -57,13 +57,28 @@ describe('entity manager tests', async () => {
         });
     });
 
-    describe('data verison tests', async () => {
+    describe('data version tests', async () => {
         it('data version is supplied in context, ', async () => {
             let connection = await setUpTestConnection();
             await initDb(connection);
-            let bookRepo = await connection.getRepository(Book);
-            // let book: Book = await connection.manager.find(Book,{},{dataVersion:0});
-            // expect(book).to.be.undefined;
+            connection.manager.queryRunner.data = {context: {dataVersion:0}};
+            let books: Book[] = await connection.manager.find(Book,{});
+            connection.manager.queryRunner.data = {context: {dataVersion:1}};
+            let books2: Author[] = await connection.manager.find(Author,{});
+            console.log(books);
+            console.log(books2);
+            expect(books).to.equal(books);
+        });
+    });
+
+    describe('reality tests', async () => {
+        it('data version is supplied in context, ', async () => {
+            let connection = await setUpTestConnection();
+            await initDb(connection);
+            connection.manager.queryRunner.data = {context: {realityId:1}};
+            let books: Book[] = await connection.manager.find(Book,{});
+            console.log(books);
+            expect(books).to.equal(books);
         });
     });
 });

@@ -6,7 +6,7 @@ export class PolarisConnection extends Connection {
     constructor(options: ConnectionOptions, polarisConfig: PolarisConfig) {
         super(options);
         // @ts-ignore
-        this.manager = new PolarisEntityManager(this, undefined, polarisConfig);
+        this.manager = new PolarisEntityManager(this, this.createQueryRunner(), polarisConfig);
     }
 
     getRepository<Entity>(target: { new(): Entity } | Function | EntitySchema<Entity> | string): Repository<Entity> {

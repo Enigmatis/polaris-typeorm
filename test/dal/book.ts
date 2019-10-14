@@ -6,11 +6,10 @@ import {Column, Entity, JoinColumn, OneToOne,} from "typeorm";
 @Entity()
 export class Book extends CommonModel {
 
-    constructor(title?: string, author?: Author, dataVersion?: number) {
+    constructor(title?: string, author?: Author) {
         super();
         title ? this.title = title : {};
         author ? this.author = author : {};
-        dataVersion ? super.dataVersion = dataVersion : {};
     }
 
     @Column()
