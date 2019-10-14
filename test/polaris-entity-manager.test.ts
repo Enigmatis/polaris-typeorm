@@ -58,27 +58,27 @@ describe('entity manager tests', async () => {
     });
 
     describe('data version tests', async () => {
-        it('data version is supplied in context, ', async () => {
+        it('books are created with data version, get all book for data version 0', async () => {
             let connection = await setUpTestConnection();
             await initDb(connection);
             connection.manager.queryRunner.data = {context: {dataVersion:0}};
-            let books: Book[] = await connection.manager.find(Book,{});
+            let booksInit: Book[] = await connection.manager.find(Book,{});
             connection.manager.queryRunner.data = {context: {dataVersion:1}};
-            let books2: Author[] = await connection.manager.find(Author,{});
-            console.log(books);
-            console.log(books2);
-            expect(books).to.equal(books);
+            let books: Book[] = await connection.manager.find(Book,{});
+            expect(booksInit.length).to.equal(2);
+            expect(books.length).to.equal(0);
         });
     });
 
     describe('reality tests', async () => {
-        it('data version is supplied in context, ', async () => {
+        it('reality id is supplied in context, ', async () => {
             let connection = await setUpTestConnection();
             await initDb(connection);
+            const bookReality1 = new Book('Jurassic Park', undefined);
             connection.manager.queryRunner.data = {context: {realityId:1}};
+            await connection.getRepository(Book).save(bookReality1);
             let books: Book[] = await connection.manager.find(Book,{});
-            console.log(books);
-            expect(books).to.equal(books);
+            expect(books[0]).to.deep.equal(bookReality1);
         });
     });
 });

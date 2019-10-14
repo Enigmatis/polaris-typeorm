@@ -86,14 +86,20 @@ export class PolarisEntityManager extends EntityManager {
         // @ts-ignore
         if (targetOrEntity.name != "DataVersion") {
             await updateDataVersionInEntity(this);
+            let realityId = this.queryRunner.data.context.realityId;
+            realityId = realityId ? realityId : 0;
             if (maybeEntityOrOptions instanceof Array) {
                 for (let t of maybeEntityOrOptions) {
                     // @ts-ignore
                     t.dataVersion = this.queryRunner.data.context.globalDataVersion;
+                    // @ts-ignore
+                    t.realityId = realityId;
                 }
             } else {
                 // @ts-ignore
                 maybeEntityOrOptions.dataVersion = this.queryRunner.data.context.globalDataVersion;
+                // @ts-ignore
+                maybeEntityOrOptions.realityId = realityId;
             }
         }
         // @ts-ignore
