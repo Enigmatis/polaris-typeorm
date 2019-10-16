@@ -8,8 +8,4 @@ export class PolarisConnection extends Connection {
         // @ts-ignore
         this.manager = new PolarisEntityManager(this, this.createQueryRunner(), polarisConfig);
     }
-
-    getRepository<Entity>(target: { new(): Entity } | Function | EntitySchema<Entity> | string): Repository<Entity> {
-        return this.manager.getRepository(target);
-    }
 }

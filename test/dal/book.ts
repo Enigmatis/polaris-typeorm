@@ -1,7 +1,6 @@
-// @ts-ignore
 import {Author} from "./author";
 import {CommonModel} from "../../index";
-import {Column, Entity, JoinColumn, OneToOne,} from "typeorm";
+import {Column, Entity, ManyToOne} from "typeorm";
 
 @Entity()
 export class Book extends CommonModel {
@@ -15,7 +14,6 @@ export class Book extends CommonModel {
     @Column()
     title: string;
 
-    @OneToOne(type => Author)
-    @JoinColumn()
+    @ManyToOne(() => Author, (author) => author.books, {onDelete: 'CASCADE'})
     author: Author;
 }

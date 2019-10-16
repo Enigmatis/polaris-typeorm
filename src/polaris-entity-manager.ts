@@ -67,7 +67,7 @@ export class PolarisEntityManager extends EntityManager {
     }
 
     addContextConditions<Entity>(optionsOrConditions?: FindConditions<Entity>) {
-        let all: FindManyOptions<Entity> | any = optionsOrConditions;
+        let all: FindManyOptions<Entity> | any = {...optionsOrConditions};
         if (this.queryRunner && this.queryRunner.data && this.queryRunner.data.context) {
             let polarisContext: PolarisContext = this.queryRunner.data.context;
             if (polarisContext.dataVersion) {
