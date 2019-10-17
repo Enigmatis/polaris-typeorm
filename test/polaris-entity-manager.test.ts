@@ -72,6 +72,19 @@ describe('entity manager tests', async () => {
             expect(bookWithCascade).to.be.undefined;
             expect(authorWithCascade).to.be.undefined;
         });
+
+        it('delete entity, soft delete and return deleted entities true and cascade is true,' +
+            ' entity and its linked entity are deleted', async () => {
+            let connection = await setUpTestConnection({softDelete: {returnEntities: true}});
+            await initDb(connection);
+            await connection.manager.delete(Author, authorWithCascadeCriteria);
+            let bookWithCascade: Book = await connection.manager.findOne(Book, {where: bookWithCascadeCriteria});
+            let authorWithCascade: Author = await connection.manager.findOne(Author, {where: authorWithCascadeCriteria});
+            let books = await connection.manager.find(Book);
+            let authors = await connection.manager.find(Author);
+            expect(bookWithCascade.deleted).to.be.true;
+            expect(authorWithCascade.deleted).to.be.true;
+        });
     });
 
     describe('data version tests', async () => {

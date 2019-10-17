@@ -25,6 +25,7 @@
   "homepage": "https://github.com/Enigmatis/polaris-typeorm#readme",
   "dependencies": {
     "@types/node": "^12.7.4",
+    "@enigmatis/polaris-logs": "^2.5.4",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.2.19"
   },
