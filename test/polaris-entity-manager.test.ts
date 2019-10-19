@@ -7,7 +7,7 @@ import {Profile} from "./dal/profile";
 
 const book2Criteria = {title: 'Jurassic Park'};
 const bookWithCascadeCriteria = {title: 'Cascade Book'};
-const author2Criteria = {where:{firstName: 'Michael'}};
+const author2Criteria = {where: {firstName: 'Michael'}};
 const userCriteria = {name: 'chen'};
 const profileCriteria = {gender: 'female'};
 const authorWithCascadeCriteria = {firstName: 'Mr'};
@@ -85,7 +85,8 @@ describe('entity manager tests', async () => {
             expect(bookWithCascade.deleted).to.be.true;
             expect(authorWithCascade.deleted).to.be.true;
         });
-        it('',async ()=>{});
+        it('', async () => {
+        });
     });
 
     describe('data version tests', async () => {
@@ -112,14 +113,15 @@ describe('entity manager tests', async () => {
             expect(books[0]).to.deep.equal(bookReality1);
         });
 
-        it('delete operational entity, linked oper header true and reality id isnt operational, entity not deleted',
-            async ()=>{
+        it('delete operational entity, linked oper header true and reality id isnt operational, entity not deleted',async function () {
+            try {
                 let connection = await setUpTestConnection({softDelete: {returnEntities: true}});
                 await initDb(connection);
                 connection.manager.queryRunner.data = {context: {realityId: 1}};
                 await connection.manager.delete(Author, author2Criteria);
-                let author: Author = await connection.manager.findOne(Author, {where: author2Criteria});
-                expect(author.deleted).to.be.true;
-            });
+            } catch (err) {
+                expect(err.message).to.equal('there are no entities to delete');
+            }
+        });
     });
 });

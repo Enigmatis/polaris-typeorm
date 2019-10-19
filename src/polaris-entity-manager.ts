@@ -54,9 +54,9 @@ export class PolarisEntityManager extends EntityManager {
     // tru update
 
     async delete<Entity extends CommonModel>(targetOrEntity: { new(): Entity } | Function | EntitySchema<Entity> | string, criteria: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | any): Promise<DeleteResult> {
-        let run = runAndMeasureTime(async () => {
+        let run =await runAndMeasureTime(async () => {
             let entities: Entity[] = await this.find(targetOrEntity, merge(criteria, realityIdCriteria(this.queryRunner.data.context)));
-            if (entities) {
+            if (entities.length > 0) {
                 for (let entity of entities) {
                     if (this.config && this.config.softDelete && this.config.softDelete.allow == false) {
                         return super.delete(targetOrEntity, criteria);
