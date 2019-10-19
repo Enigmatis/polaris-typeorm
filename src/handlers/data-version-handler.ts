@@ -1,5 +1,6 @@
-import {PolarisEntityManager} from "../polaris-entity-manager";
+import {PolarisContext, PolarisEntityManager} from "../polaris-entity-manager";
 import {DataVersion} from "../models/data-version";
+import {MoreThan} from "typeorm";
 
 export async function updateDataVersionInEntity<Entity>(polarisEntityManager: PolarisEntityManager) {
     let polarisContext = polarisEntityManager.queryRunner.data.context;
@@ -24,3 +25,6 @@ export async function updateDataVersionInEntity<Entity>(polarisEntityManager: Po
     }
     logger ? logger.debug('Finished data version job when inserting/updating entity') : {};
 }
+
+export const dataVersionCriteria = (context: PolarisContext) =>
+    context && context.dataVersion ? {where: {dataVersion: MoreThan(context.dataVersion)}} : {};

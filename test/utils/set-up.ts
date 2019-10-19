@@ -7,6 +7,8 @@ import {createPolarisConnection} from "../../src/connections/create-connection";
 import {PolarisConfig} from "../../src/polaris-entity-manager";
 import {Profile} from "../dal/profile";
 import {User} from "../dal/user";
+// @ts-ignore
+import {PolarisGraphQLLogger} from '@enigmatis/polaris-graphql-logger';
 
 const path = require('path');
 
@@ -27,7 +29,22 @@ export const setUpTestConnection = async (polarisConfig?: PolarisConfig) => {
         synchronize: true,
         logging: false
     };
-    return await createPolarisConnection(connectionOptions, polarisConfig);
+
+    const applicationLogProperties = {
+        id: 'example',
+        name: 'example',
+        component: 'repo',
+        environment: 'dev',
+        version: '1'
+    };
+
+    const polarisGraphQLLogger = new PolarisGraphQLLogger(applicationLogProperties, {
+        loggerLevel: 'debug',
+        writeToConsole: true,
+        writeFullMessageToConsole: false
+    });
+
+    return await createPolarisConnection(connectionOptions, polarisConfig, polarisGraphQLLogger);
 };
 
 export const initDb = async (connection: Connection) => {

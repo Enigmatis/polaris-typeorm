@@ -2,23 +2,24 @@ import {
     Connection, DeepPartial, DeleteResult,
     EntityManager,
     EntitySchema, FindConditions,
-    FindManyOptions, FindOneOptions, MoreThan, ObjectID,
+    FindManyOptions, FindOneOptions, ObjectID,
     ObjectType, QueryRunner, SaveOptions, UpdateResult
 } from "typeorm";
-import {softDeleteHandler} from "./handlers/soft-delete-handler";
+import {softDeleteCriteria} from "./handlers/soft-delete-handler";
 import {QueryDeepPartialEntity} from "typeorm/query-builder/QueryPartialEntity";
 import {DataVersion} from "./models/data-version";
-import {updateDataVersionInEntity} from "./handlers/data-version-handler";
+import {dataVersionCriteria, updateDataVersionInEntity} from "./handlers/data-version-handler";
 import {runAndMeasureTime} from "./measure-time";
 import {PolarisLogger} from "@enigmatis/polaris-logs";
 import {CommonModel} from "./models/common-model";
+import {realityIdCriteria, realityIdWithLinkedOperCriteria} from "./handlers/reality-handler";
 
-interface PolarisContext {
-    logger?: any;
+export interface PolarisContext {
     dataVersion?: number;
     realityId?: number;
     globalDataVersion?: number;
     irrelevantEntities?: any;
+    includeLinkedOper?: boolean;
 }
 
 export interface PolarisConfig {
@@ -28,13 +29,20 @@ export interface PolarisConfig {
     }
 }
 
+const merge = require('deepmerge');
+
+const findConditions = (optionsOrConditions?: any, context?: PolarisContext) => {
+    let x = merge(optionsOrConditions, softDeleteCriteria(this.config), realityIdWithLinkedOperCriteria(context), dataVersionCriteria(context));
+    return x;
+};
+
 export class PolarisEntityManager extends EntityManager {
 
     config: PolarisConfig;
     logger: any;
 
-    constructor(connection: Connection, queryRunner: QueryRunner, config: PolarisConfig, logger: PolarisLogger) {
-        super(connection, queryRunner);
+    constructor(connection: Connection, config: PolarisConfig, logger: PolarisLogger) {
+        super(connection, connection.createQueryRunner());
         this.queryRunner.data = {context: {}};
         this.config = config;
         this.logger = logger;
@@ -44,12 +52,10 @@ export class PolarisEntityManager extends EntityManager {
     //todo: throw error if entity is null
     // if the field is common modal or list of common model and cascade all or cascade remove is on soft delete it too and field is not syntethic
     // tru update
-    // throw error if failed at runtime
-    // update data version after success
 
     async delete<Entity extends CommonModel>(targetOrEntity: { new(): Entity } | Function | EntitySchema<Entity> | string, criteria: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | any): Promise<DeleteResult> {
         let run = runAndMeasureTime(async () => {
-            let entities: Entity[] = await this.find(targetOrEntity, criteria);
+            let entities: Entity[] = await this.find(targetOrEntity, merge(criteria, realityIdCriteria(this.queryRunner.data.context)));
             if (entities) {
                 for (let entity of entities) {
                     if (this.config && this.config.softDelete && this.config.softDelete.allow == false) {
@@ -72,7 +78,7 @@ export class PolarisEntityManager extends EntityManager {
 
     async findOne<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, idOrOptionsOrConditions?: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | FindOneOptions<Entity> | any, maybeOptions?: FindOneOptions<Entity>): Promise<Entity | undefined> {
         // @ts-ignore
-        return super.findOne(entityClass, this.addContextConditions(idOrOptionsOrConditions), maybeOptions);
+        return super.findOne(entityClass, findConditions(idOrOptionsOrConditions), maybeOptions);
     }
 
     //todo: measure time and log finished with time
@@ -85,7 +91,7 @@ export class PolarisEntityManager extends EntityManager {
         let entityClassType: any = entityClass;
         // @ts-ignore
         return super.find(entityClass,
-            entityClassType.name == "DataVersion" ? optionsOrConditions : this.addContextConditions(optionsOrConditions));
+            entityClassType.name == "DataVersion" ? optionsOrConditions : findConditions(optionsOrConditions));
     }
 
     //todo: count with spec with data version spec with reality spec(without linked) with deleted spec(configs!=def)
@@ -139,22 +145,4 @@ export class PolarisEntityManager extends EntityManager {
         partialEntity = {...partialEntity, ...{dataVersion: this.queryRunner.data.context.globalDataVersion}};
         return super.update(target, criteria, partialEntity);
     }
-
-
-    addContextConditions<Entity>(optionsOrConditions?: FindConditions<Entity>) {
-        let all: FindManyOptions<Entity> | any = {...optionsOrConditions};
-        if (this.queryRunner && this.queryRunner.data && this.queryRunner.data.context) {
-            let polarisContext: PolarisContext = this.queryRunner.data.context;
-            if (polarisContext.dataVersion) {
-                all.where = {...all.where, dataVersion: MoreThan(polarisContext.dataVersion)};
-            }
-            if (polarisContext.realityId) {
-                all.where = {...all.where, realityId: polarisContext.realityId};
-            }
-        }
-        let softDelete = softDeleteHandler(this.config);
-        all.where = {...all.where, ...softDelete};
-        return all;
-    }
-
 }

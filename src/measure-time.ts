@@ -1,3 +1,4 @@
+const {performance} = require('perf_hooks');
 export const runAndMeasureTime = (run) => {
     let t0 = performance.now();
 
