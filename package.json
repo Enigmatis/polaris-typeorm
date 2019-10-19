@@ -4,7 +4,6 @@
   "description": "support for typeorm in polaris",
   "main": "index.ts",
   "scripts": {
-    "link": "npm link typeorm",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -26,8 +25,8 @@
   "dependencies": {
     "@types/node": "^12.7.4",
     "reflect-metadata": "^0.1.13",
-    "typeorm": "^0.2.19",
-    "deepmerge": "^4.1.1",
+    "typeorm": "^0.2.20",
+    "deepmerge": "^4.1.1"
   },
   "devDependencies": {
     "typescript": "^3.6.2",

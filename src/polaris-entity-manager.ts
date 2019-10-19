@@ -3,16 +3,16 @@ import {
     EntityManager,
     EntitySchema, FindConditions,
     FindManyOptions, FindOneOptions, ObjectID,
-    ObjectType, QueryRunner, SaveOptions, UpdateResult
+    ObjectType, SaveOptions, UpdateResult
 } from "typeorm";
-import {softDeleteCriteria} from "./handlers/soft-delete-handler";
+import {softDeleteCriteria, softDeleteRecursive} from "./handlers/soft-delete-handler";
 import {QueryDeepPartialEntity} from "typeorm/query-builder/QueryPartialEntity";
 import {DataVersion} from "./models/data-version";
 import {dataVersionCriteria, updateDataVersionInEntity} from "./handlers/data-version-handler";
 import {runAndMeasureTime} from "./measure-time";
-import {PolarisLogger} from "@enigmatis/polaris-logs";
 import {CommonModel} from "./models/common-model";
 import {realityIdCriteria, realityIdWithLinkedOperCriteria} from "./handlers/reality-handler";
+import {PolarisGraphQLLogger} from "@enigmatis/polaris-graphql-logger"
 
 export interface PolarisContext {
     dataVersion?: number;
@@ -31,39 +31,38 @@ export interface PolarisConfig {
 
 const merge = require('deepmerge');
 
-const findConditions = (optionsOrConditions?: any, context?: PolarisContext) => {
-    let x = merge(optionsOrConditions, softDeleteCriteria(this.config), realityIdWithLinkedOperCriteria(context), dataVersionCriteria(context));
-    return x;
-};
+
+//todo: make transactional everywhere with updateDataVersionInEntity
+//todo: find with sort and pageable and a class that has spec with sort and page and without spec
+//todo count with example spec
+//todo: save and flush
+//todo: find all ids including deleted elements for irrelevant entities query select by entitiy only spec is reality
 
 export class PolarisEntityManager extends EntityManager {
 
     config: PolarisConfig;
     logger: any;
 
-    constructor(connection: Connection, config: PolarisConfig, logger: PolarisLogger) {
+    constructor(connection: Connection, config: PolarisConfig, logger: any) {
         super(connection, connection.createQueryRunner());
         this.queryRunner.data = {context: {}};
         this.config = config;
         this.logger = logger;
     }
 
-    //todo: check if same reality
-    //todo: throw error if entity is null
-    // if the field is common modal or list of common model and cascade all or cascade remove is on soft delete it too and field is not syntethic
-    // tru update
-
+    findConditions = (optionsOrConditions?: any, context?: PolarisContext) => {
+        let x = merge(optionsOrConditions, softDeleteCriteria(this.config), realityIdWithLinkedOperCriteria(context), dataVersionCriteria(context));
+        return x;
+    };
+    //todo: check if throw error logs an error
     async delete<Entity extends CommonModel>(targetOrEntity: { new(): Entity } | Function | EntitySchema<Entity> | string, criteria: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | any): Promise<DeleteResult> {
-        let run =await runAndMeasureTime(async () => {
+        let run = await runAndMeasureTime(async () => {
             let entities: Entity[] = await this.find(targetOrEntity, merge(criteria, realityIdCriteria(this.queryRunner.data.context)));
             if (entities.length > 0) {
-                for (let entity of entities) {
-                    if (this.config && this.config.softDelete && this.config.softDelete.allow == false) {
-                        return super.delete(targetOrEntity, criteria);
-                    }
-                    entity.deleted = true;
+                if (this.config && this.config.softDelete && this.config.softDelete.allow == false) {
+                    return super.delete(targetOrEntity, merge(criteria, realityIdCriteria(this.queryRunner.data.context)));
                 }
-                return await this.save(entities);
+                return softDeleteRecursive(targetOrEntity, entities, this);
             } else {
                 throw new Error('there are no entities to delete');
             }
@@ -72,72 +71,81 @@ export class PolarisEntityManager extends EntityManager {
         return run.returnValue;
     }
 
-    //todo: measure time and log finished with time
-    //todo: check if same reality with liked entity and in data version and not deleted (when configs are not default)
-    //todo: make one for findone with id and with spec
-
     async findOne<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, idOrOptionsOrConditions?: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | FindOneOptions<Entity> | any, maybeOptions?: FindOneOptions<Entity>): Promise<Entity | undefined> {
-        // @ts-ignore
-        return super.findOne(entityClass, findConditions(idOrOptionsOrConditions), maybeOptions);
+        let run = await runAndMeasureTime(async () => {
+            // @ts-ignore
+            return super.findOne(entityClass, this.findConditions(idOrOptionsOrConditions), maybeOptions);
+        });
+        this.logger.debug('finished finding entity successfully', {elapsedTime: run.time});
+        return run.returnValue;
     }
 
-    //todo: measure time and log finished with time
-    //todo: check if same reality with liked entity and in data version and not deleted (when configs are not default)
-    //todo: make one for sort and pageable and a class that has spec with sort and page and without spec
-    /**
-     * Finds entities that match given find options or conditions.
-     */
     async find<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, optionsOrConditions?: FindManyOptions<Entity> | any): Promise<Entity[]> {
-        let entityClassType: any = entityClass;
-        // @ts-ignore
-        return super.find(entityClass,
-            entityClassType.name == "DataVersion" ? optionsOrConditions : findConditions(optionsOrConditions));
+        let run = await runAndMeasureTime(async () => {
+            let entityClassType: any = entityClass;
+            // @ts-ignore
+            return super.find(entityClass,
+                entityClassType.name == "DataVersion" ? optionsOrConditions : this.findConditions(optionsOrConditions));
+        });
+        this.logger.debug('finished find action successfully', {elapsedTime: run.time});
+        return run.returnValue;
     }
 
-    //todo: count with spec with data version spec with reality spec(without linked) with deleted spec(configs!=def)
-    //todo: measure time and log finished with time
-    //todo count with example spec
-    // @ts-ignore
-    count<Entity>(entityClass: string, conditions?: FindConditions<Entity>): Promise<number> {
-        return undefined;
+
+    async count<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, optionsOrConditions?: FindManyOptions<Entity> | any): Promise<number> {
+        let run = await runAndMeasureTime(() => {
+            // @ts-ignore
+            return super.count(entityClass, findConditions(merge(optionsOrConditions, realityIdCriteria(this.queryRunner.data.context))));
+        });
+        this.logger.debug('finished count action successfully', {elapsedTime: run.time});
+        return run.returnValue;
     }
 
-    //todo: measure time and log finished with time
-    //todo: if findone and in the same reality true, else false
-    // @ts-ignore
-    hasId(target: Function | string, entity: any): boolean {
-        return false;
+    async exists<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, idOrOptionsOrConditions?: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | FindOneOptions<Entity> | any, maybeOptions?: FindOneOptions<Entity>): Promise<Entity | undefined> {
+        let run = await runAndMeasureTime(() => {
+            // @ts-ignore
+            return super.count(entityClass, findConditions(merge(optionsOrConditions, realityIdCriteria(this.queryRunner.data.context)))) >= 1 ? true : false;
+        });
+        this.logger.debug('finished exist action successfully', {elapsedTime: run.time});
+        return run.returnValue;
     }
 
-    //todo: measure time and log finished with time
-    //todo: save only if entity has the same reality id or if new
-    //todo: make transactional everywhere with updateDataVersionInEntity
-    //todo: save and flush
-    async save<Entity, T extends DeepPartial<Entity>>(targetOrEntity: (T | T[]) | ObjectType<Entity> | EntitySchema<Entity> | string, maybeEntityOrOptions?: T | T[], maybeOptions?: SaveOptions): Promise<T | T[]> {
-        // @ts-ignore
-        if (targetOrEntity.name != "DataVersion") {
-            await updateDataVersionInEntity(this);
-            let realityId = this.queryRunner.data.context.realityId;
-            realityId = realityId ? realityId : 0;
-            if (maybeEntityOrOptions instanceof Array) {
-                for (let t of maybeEntityOrOptions) {
-                    // @ts-ignore
-                    t.dataVersion = this.queryRunner.data.context.globalDataVersion;
-                    // @ts-ignore
-                    t.realityId = realityId;
-                }
-            } else {
-                // @ts-ignore
-                maybeEntityOrOptions.dataVersion = this.queryRunner.data.context.globalDataVersion;
-                // @ts-ignore
-                maybeEntityOrOptions.realityId = realityId;
-            }
+    setRealityIdOfEntity<Entity extends CommonModel>(entity: Entity, realityId: number) {
+        if (!(entity.realityId && entity.realityId != realityId)) {
+            entity.realityId = realityId
+        } else {
+            throw new Error('reality id of entity is different from header');
         }
-        // @ts-ignore
-        return super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
     }
 
-    //todo: find all ids including deleted elements for irrelevant entities query select by entitiy only spec is reality
+    async save<Entity extends CommonModel, T extends DeepPartial<Entity>>(targetOrEntity: (T | T[]) | ObjectType<Entity> | EntitySchema<Entity> | string, maybeEntityOrOptions?: T | T[], maybeOptions?: SaveOptions): Promise<T | T[]> {
+        let run = await runAndMeasureTime(async () => {
+            // @ts-ignore
+            if (targetOrEntity.name != "DataVersion") {
+                await updateDataVersionInEntity(this);
+                let realityId = this.queryRunner.data.context.realityId;
+                realityId = realityId ? realityId : 0;
+                if (maybeEntityOrOptions instanceof Array) {
+                    for (let t of maybeEntityOrOptions) {
+                        // @ts-ignore
+                        t.dataVersion = this.queryRunner.data.context.globalDataVersion;
+                        // @ts-ignore
+                        this.setRealityIdOfEntity(t, realityId);
+                    }
+                } else {
+                    // @ts-ignore
+                    maybeEntityOrOptions.dataVersion = this.queryRunner.data.context.globalDataVersion;
+                    // @ts-ignore
+                    this.setRealityIdOfEntity(maybeEntityOrOptions, realityId);
+                }
+            }
+            // @ts-ignore
+            return super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
+        });
+        this.logger.debug('finished save action successfully', {elapsedTime: run.time});
+        return run.returnValue;
+    }
+
 
 
     async update<Entity>(target: { new(): Entity } | Function | EntitySchema<Entity> | string, criteria: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | any, partialEntity: QueryDeepPartialEntity<Entity>): Promise<UpdateResult> {

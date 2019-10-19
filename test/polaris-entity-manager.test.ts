@@ -1,26 +1,29 @@
 import {expect} from "chai";
 import {Book} from "./dal/book";
-import {initDb, setUpTestConnection} from "./utils/set-up";
+import {authors, books, initDb, profile, setUpTestConnection, user} from "./utils/set-up";
 import {Author} from "./dal/author";
 import {User} from "./dal/user";
 import {Profile} from "./dal/profile";
 
-const book2Criteria = {title: 'Jurassic Park'};
-const bookWithCascadeCriteria = {title: 'Cascade Book'};
-const author2Criteria = {where: {firstName: 'Michael'}};
-const userCriteria = {name: 'chen'};
-const profileCriteria = {gender: 'female'};
-const authorWithCascadeCriteria = {firstName: 'Mr'};
+const testBookCriteria = {where: {title: books[0].title}};
+const testAuthorCriteria = {where: {firstName: authors[0].firstName}};
+
+const bookWithCascadeCriteria = {where: {title: books[1].title}};
+const authorWithCascadeCriteria = {where: {firstName: authors[1].firstName}};
+
+const userCriteria = {where: {name: user.name}};
+const profileCriteria = {where: {gender: profile.gender}};
 
 describe('entity manager tests', async () => {
-    describe('soft delete tests', async () => {
+    describe('soft delete tests', () => {
 
         it('delete entity, return deleted entities is true, get entity that is deleted', async () => {
             let connection = await setUpTestConnection({softDelete: {returnEntities: true}});
             await initDb(connection);
-            await connection.manager.delete(Book, book2Criteria);
-            let book: Book = await connection.manager.findOne(Book, {where: book2Criteria});
+            await connection.manager.delete(Book, testBookCriteria);
+            let book: Book = await connection.manager.findOne(Book, testBookCriteria);
             expect(book.deleted).to.be.true;
+            await connection.close();
         });
 
         it('delete entity, return deleted entities is true, check that linked entity was not deleted', async () => {
@@ -32,6 +35,7 @@ describe('entity manager tests', async () => {
                 relations: ["profile"]
             });
             expect(user.profile.deleted).to.be.false;
+            await connection.close();
         });
 
         it('delete linked entity, should not return deleted entities(first level), get entity and its linked entity', async () => {
@@ -44,22 +48,25 @@ describe('entity manager tests', async () => {
             });
             expect(user.deleted).to.be.false;
             expect(user.profile.deleted).to.be.true;
+            await connection.close();
         });
 
         it('delete entity, should not return deleted entities, doesnt return deleted entity', async () => {
             let connection = await setUpTestConnection();
             await initDb(connection);
-            let bookRepo = await connection.manager.delete(Book, book2Criteria);
-            let book: Book = await connection.manager.findOne(Book, {where: book2Criteria});
+            let bookRepo = await connection.manager.delete(Book, testBookCriteria);
+            let book: Book = await connection.manager.findOne(Book, testBookCriteria);
             expect(book).to.be.undefined;
+            await connection.close();
         });
 
         it('delete entity, soft delete allow is false and return deleted entities true, doesnt return deleted entity', async () => {
             let connection = await setUpTestConnection({softDelete: {returnEntities: true, allow: false}});
             await initDb(connection);
-            await connection.manager.delete(Author, author2Criteria);
-            let author: Author = await connection.manager.findOne(Author, {where: author2Criteria});
+            await connection.manager.delete(Author, testAuthorCriteria);
+            let author: Author = await connection.manager.findOne(Author, testAuthorCriteria);
             expect(author).to.be.undefined;
+            await connection.close();
         });
 
         it('delete entity, soft delete allow is false and return deleted entities true and cascade is true,' +
@@ -67,10 +74,11 @@ describe('entity manager tests', async () => {
             let connection = await setUpTestConnection({softDelete: {returnEntities: true, allow: false}});
             await initDb(connection);
             await connection.manager.delete(Author, authorWithCascadeCriteria);
-            let bookWithCascade: Book = await connection.manager.findOne(Book, {where: bookWithCascadeCriteria});
-            let authorWithCascade: Author = await connection.manager.findOne(Author, {where: authorWithCascadeCriteria});
+            let bookWithCascade: Book = await connection.manager.findOne(Book, bookWithCascadeCriteria);
+            let authorWithCascade: Author = await connection.manager.findOne(Author, authorWithCascadeCriteria);
             expect(bookWithCascade).to.be.undefined;
             expect(authorWithCascade).to.be.undefined;
+            await connection.close();
         });
 
         it('delete entity, soft delete and return deleted entities true and cascade is true,' +
@@ -78,14 +86,13 @@ describe('entity manager tests', async () => {
             let connection = await setUpTestConnection({softDelete: {returnEntities: true}});
             await initDb(connection);
             await connection.manager.delete(Author, authorWithCascadeCriteria);
-            let bookWithCascade: Book = await connection.manager.findOne(Book, {where: bookWithCascadeCriteria});
-            let authorWithCascade: Author = await connection.manager.findOne(Author, {where: authorWithCascadeCriteria});
+            let bookWithCascade: Book = await connection.manager.findOne(Book, bookWithCascadeCriteria);
+            let authorWithCascade: Author = await connection.manager.findOne(Author, authorWithCascadeCriteria);
             let books = await connection.manager.find(Book);
             let authors = await connection.manager.find(Author);
             expect(bookWithCascade.deleted).to.be.true;
             expect(authorWithCascade.deleted).to.be.true;
-        });
-        it('', async () => {
+            await connection.close();
         });
     });
 
@@ -99,6 +106,7 @@ describe('entity manager tests', async () => {
             let books: Book[] = await connection.manager.find(Book, {});
             expect(booksInit.length).to.equal(3);
             expect(books.length).to.equal(0);
+            await connection.close();
         });
     });
 
@@ -111,17 +119,52 @@ describe('entity manager tests', async () => {
             await connection.getRepository(Book).save(bookReality1);
             let books: Book[] = await connection.manager.find(Book, {});
             expect(books[0]).to.deep.equal(bookReality1);
+            await connection.close();
         });
 
-        it('delete operational entity, linked oper header true and reality id isnt operational, entity not deleted',async function () {
+        it('delete operational entity, linked oper header true and reality id isnt operational, entity not deleted', async function () {
+            let connection = await setUpTestConnection({softDelete: {returnEntities: true}});
+            await initDb(connection);
+            connection.manager.queryRunner.data = {context: {realityId: 1}};
             try {
-                let connection = await setUpTestConnection({softDelete: {returnEntities: true}});
-                await initDb(connection);
-                connection.manager.queryRunner.data = {context: {realityId: 1}};
-                await connection.manager.delete(Author, author2Criteria);
+                await connection.manager.delete(Author, testAuthorCriteria);
             } catch (err) {
                 expect(err.message).to.equal('there are no entities to delete');
             }
+            await connection.close();
+        });
+    });
+    describe('works as expected tests', () => {
+
+        it('find one with id, act as expected', async () => {
+            let connection = await setUpTestConnection();
+            await initDb(connection);
+            const book = new Book('my book');
+            await connection.getRepository(Book).save(book);
+            let bookFound: Book = await connection.manager.findOne(Book, {where: {id: book.id}});
+            expect(book).to.deep.equal(bookFound);
+            await connection.close();
+        });
+
+        it('save existing entity with different reality id, fail saving', async () => {
+            let connection = await setUpTestConnection();
+            await initDb(connection);
+            const book = new Book('my book');
+            await connection.getRepository(Book).save(book);
+            book.realityId = 1;
+            try {
+                await connection.manager.save(Book, book);
+            } catch (err) {
+                expect(err.message).to.equal('reality id of entity is different from header');
+            }
+            await connection.close();
+        });
+
+        it('count, act as expected', async () => {
+            let connection = await setUpTestConnection();
+            await initDb(connection);
+            expect(await connection.getRepository(Book).count()).to.equal(3);
+            await connection.close();
         });
     });
 });
