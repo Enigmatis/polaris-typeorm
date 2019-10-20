@@ -9,8 +9,8 @@ import {PolarisGraphQLLogger} from "@enigmatis/polaris-graphql-logger"
 import {applicationLogProperties, connectionOptions, loggerConfig} from "./test-properties";
 
 export const setUpTestConnection = async (polarisConfig?: PolarisConfig) => {
-    const polarisGraphQLLogger = new PolarisGraphQLLogger(applicationLogProperties, loggerConfig);
-    let connection = await createPolarisConnection(connectionOptions, polarisConfig, polarisGraphQLLogger);
+    const polarisGraphQLLogger = await new PolarisGraphQLLogger(applicationLogProperties, loggerConfig);
+    let connection = await createPolarisConnection(connectionOptions, polarisGraphQLLogger, polarisConfig);
     await connection.dropDatabase();
     await connection.synchronize();
     return connection;

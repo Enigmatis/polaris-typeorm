@@ -4,8 +4,9 @@ export abstract class CommonModel {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
-    @Column()
-    dataVersion: number;
+    @Column({type: 'real',
+        default: 0,})
+    dataVersion: string;
 
     @Column()
     realityId: number = 0;

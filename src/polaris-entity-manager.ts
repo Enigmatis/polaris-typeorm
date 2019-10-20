@@ -2,7 +2,7 @@ import {
     Connection, DeepPartial, DeleteResult,
     EntityManager,
     EntitySchema, FindConditions,
-    FindManyOptions, FindOneOptions, ObjectID,
+    FindManyOptions, FindOneOptions, MoreThan, ObjectID,
     ObjectType, SaveOptions, UpdateResult
 } from "typeorm";
 import {softDeleteCriteria, softDeleteRecursive} from "./handlers/soft-delete-handler";
@@ -50,19 +50,23 @@ export class PolarisEntityManager extends EntityManager {
         this.logger = logger;
     }
 
-    findConditions = (optionsOrConditions?: any, context?: PolarisContext) => {
-        let x = merge(optionsOrConditions, softDeleteCriteria(this.config), realityIdWithLinkedOperCriteria(context), dataVersionCriteria(context));
-        return x;
+    findConditions = (optionsOrConditions?: any) => {
+        optionsOrConditions = optionsOrConditions ? optionsOrConditions : {};
+        let context = this.queryRunner.data.context;
+        let where = {where: {...optionsOrConditions.where, ...dataVersionCriteria(context).where, ...softDeleteCriteria(this.config).where, ...realityIdWithLinkedOperCriteria(context).where}};
+        optionsOrConditions.where = where.where;
+        return optionsOrConditions;
     };
+
     //todo: check if throw error logs an error
     async delete<Entity extends CommonModel>(targetOrEntity: { new(): Entity } | Function | EntitySchema<Entity> | string, criteria: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | any): Promise<DeleteResult> {
         let run = await runAndMeasureTime(async () => {
             let entities: Entity[] = await this.find(targetOrEntity, merge(criteria, realityIdCriteria(this.queryRunner.data.context)));
             if (entities.length > 0) {
                 if (this.config && this.config.softDelete && this.config.softDelete.allow == false) {
-                    return super.delete(targetOrEntity, merge(criteria, realityIdCriteria(this.queryRunner.data.context)));
+                    return await super.delete(targetOrEntity, merge(criteria, realityIdCriteria(this.queryRunner.data.context)));
                 }
-                return softDeleteRecursive(targetOrEntity, entities, this);
+                return await softDeleteRecursive(targetOrEntity, entities, this);
             } else {
                 throw new Error('there are no entities to delete');
             }
@@ -94,8 +98,10 @@ export class PolarisEntityManager extends EntityManager {
 
     async count<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, optionsOrConditions?: FindManyOptions<Entity> | any): Promise<number> {
         let run = await runAndMeasureTime(() => {
+            optionsOrConditions = optionsOrConditions ? optionsOrConditions : {};
+            optionsOrConditions.where = realityIdCriteria(this.queryRunner.data.context);
             // @ts-ignore
-            return super.count(entityClass, findConditions(merge(optionsOrConditions, realityIdCriteria(this.queryRunner.data.context))));
+            return super.count(entityClass, this.findConditions(optionsOrConditions));
         });
         this.logger.debug('finished count action successfully', {elapsedTime: run.time});
         return run.returnValue;
@@ -103,8 +109,10 @@ export class PolarisEntityManager extends EntityManager {
 
     async exists<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, idOrOptionsOrConditions?: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | FindOneOptions<Entity> | any, maybeOptions?: FindOneOptions<Entity>): Promise<Entity | undefined> {
         let run = await runAndMeasureTime(() => {
+            idOrOptionsOrConditions = idOrOptionsOrConditions ? idOrOptionsOrConditions : {};
+            idOrOptionsOrConditions.where = realityIdCriteria(this.queryRunner.data.context);
             // @ts-ignore
-            return super.count(entityClass, findConditions(merge(optionsOrConditions, realityIdCriteria(this.queryRunner.data.context)))) >= 1 ? true : false;
+            return super.count(entityClass, this.findConditions(idOrOptionsOrConditions)) >= 1 ? true : false;
         });
         this.logger.debug('finished exist action successfully', {elapsedTime: run.time});
         return run.returnValue;
@@ -145,7 +153,6 @@ export class PolarisEntityManager extends EntityManager {
         this.logger.debug('finished save action successfully', {elapsedTime: run.time});
         return run.returnValue;
     }
-
 
 
     async update<Entity>(target: { new(): Entity } | Function | EntitySchema<Entity> | string, criteria: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | any, partialEntity: QueryDeepPartialEntity<Entity>): Promise<UpdateResult> {

@@ -27,4 +27,4 @@ export async function updateDataVersionInEntity<Entity>(polarisEntityManager: Po
 }
 
 export const dataVersionCriteria = (context: PolarisContext) =>
-    context && context.dataVersion ? {where: {dataVersion: MoreThan(context.dataVersion)}} : {};
+    context && context.dataVersion != undefined ? {where: {dataVersion: MoreThan(context.dataVersion)}} : {};

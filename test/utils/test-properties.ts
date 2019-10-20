@@ -16,7 +16,6 @@ export const connectionOptions: ConnectionOptions = {
         CommonModel,
         DataVersion
     ],
-    synchronize: true,
     logging: false
 };
 
