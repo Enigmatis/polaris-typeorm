@@ -1,5 +1,6 @@
-import {PolarisConfig, PolarisEntityManager} from "../polaris-entity-manager";
+import { PolarisEntityManager} from "../polaris-entity-manager";
 import {CommonModel} from "../models/common-model";
+import {PolarisConfig} from "../common-polaris";
 
 export const softDeleteCriteria = (config?: PolarisConfig) =>
     config && config.softDelete && config.softDelete.returnEntities ? {} : {where: {deleted: false}};

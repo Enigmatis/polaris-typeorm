@@ -5,7 +5,7 @@ export abstract class CommonModel {
     id: string;
 
     @Column({type: 'real',
-        default: 0,})
+        default: 0})
     dataVersion: string;
 
     @Column()

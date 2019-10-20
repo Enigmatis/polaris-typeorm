@@ -1,7 +1,6 @@
 import {CommonModel} from "../../index";
-import {Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryColumn} from "typeorm";
+import {Column, Entity, OneToMany} from "typeorm";
 import {Book} from "./book";
-import {Profile} from "./profile";
 
 @Entity()
 export class Author extends CommonModel {

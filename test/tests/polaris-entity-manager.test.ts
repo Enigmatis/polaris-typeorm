@@ -1,9 +1,9 @@
 import {expect} from "chai";
-import {Book} from "./dal/book";
-import {authors, books, initDb, profile, setUpTestConnection, user} from "./utils/set-up";
-import {Author} from "./dal/author";
-import {User} from "./dal/user";
-import {Profile} from "./dal/profile";
+import {Book} from "../dal/book";
+import {authors, books, initDb, profile, setUpTestConnection, user} from "../utils/set-up";
+import {Author} from "../dal/author";
+import {User} from "../dal/user";
+import {Profile} from "../dal/profile";
 
 const testBookCriteria = {where: {title: books[0].title}};
 const testAuthorCriteria = {where: {firstName: authors[0].firstName}};
@@ -13,6 +13,7 @@ const authorWithCascadeCriteria = {where: {firstName: authors[1].firstName}};
 
 const userCriteria = {where: {name: user.name}};
 const profileCriteria = {where: {gender: profile.gender}};
+
 
 describe('entity manager tests', async () => {
     describe('soft delete tests', () => {
@@ -54,7 +55,7 @@ describe('entity manager tests', async () => {
         it('delete entity, should not return deleted entities, doesnt return deleted entity', async () => {
             let connection = await setUpTestConnection();
             await initDb(connection);
-            let bookRepo = await connection.manager.delete(Book, testBookCriteria);
+            await connection.manager.delete(Book, testBookCriteria);
             let book: Book = await connection.manager.findOne(Book, testBookCriteria);
             expect(book).to.be.undefined;
             await connection.close();
@@ -88,8 +89,6 @@ describe('entity manager tests', async () => {
             await connection.manager.delete(Author, authorWithCascadeCriteria);
             let bookWithCascade: Book = await connection.manager.findOne(Book, bookWithCascadeCriteria);
             let authorWithCascade: Author = await connection.manager.findOne(Author, authorWithCascadeCriteria);
-            let books = await connection.manager.find(Book);
-            let authors = await connection.manager.find(Author);
             expect(bookWithCascade.deleted).to.be.true;
             expect(authorWithCascade.deleted).to.be.true;
             await connection.close();
@@ -107,6 +106,8 @@ describe('entity manager tests', async () => {
             expect(booksInit.length).to.equal(books.length);
             expect(booksAfterDataVersion.length).to.equal(0);
             await connection.close();
+        });
+        it('fail save action, data version not progressing', async () => {
         });
     });
 
@@ -165,6 +166,18 @@ describe('entity manager tests', async () => {
             await initDb(connection);
             expect(await connection.manager.count(Book)).to.equal(books.length);
             await connection.close();
+        });
+        it('exist', async () => {
+        });
+
+        it('order by', async () => {
+        });
+
+        it('pages', async () => {
+        });
+        it('save and flush', async () => {
+        });
+        it('find all ids including deleted elements for irrelevant entities query select by entitiy only spec is reality', async () => {
         });
     });
 });
