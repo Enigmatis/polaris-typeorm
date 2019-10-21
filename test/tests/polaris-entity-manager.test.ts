@@ -4,6 +4,7 @@ import {authors, books, initDb, profile, setUpTestConnection, user} from "../uti
 import {Author} from "../dal/author";
 import {User} from "../dal/user";
 import {Profile} from "../dal/profile";
+import {DataVersion} from "../../src/models/data-version";
 
 const testBookCriteria = {where: {title: books[0].title}};
 const testAuthorCriteria = {where: {firstName: authors[0].firstName}};
@@ -108,18 +109,30 @@ describe('entity manager tests', async () => {
             await connection.close();
         });
         it('fail save action, data version not progressing', async () => {
+            let connection = await setUpTestConnection();
+            await initDb(connection);
+            const bookFail = new Book('fail book');
+            connection.manager.queryRunner.data = {context: {realityId: 1}};
+            await connection.manager.save(Book, bookFail);
+            let dv = await connection.manager.findOne(DataVersion);
+            let bookSaved = await connection.manager.findOne(Book, bookFail);
+            expect(dv.value).to.equal(1);
+            expect(bookSaved).to.equal(undefined);
+            await connection.close();
         });
     });
 
     describe('reality tests', async () => {
-        it('reality id is supplied in context, ', async () => {
+        it('reality id is supplied in context', async () => {
             let connection = await setUpTestConnection();
             await initDb(connection);
             const bookReality1 = new Book('Jurassic Park');
+            bookReality1.realityId = 1;
             connection.manager.queryRunner.data = {context: {realityId: 1}};
-            await connection.getRepository(Book).save(bookReality1);
-            let books: Book[] = await connection.manager.find(Book, {});
-            expect(books[0]).to.deep.equal(bookReality1);
+            await connection.manager.save(Book, bookReality1);
+            connection.manager.queryRunner.data = {context: {realityId: 1}};
+            let book: Book = await connection.manager.findOne(Book, {});
+            expect(book).to.deep.equal(bookReality1);
             await connection.close();
         });
 
@@ -167,17 +180,18 @@ describe('entity manager tests', async () => {
             expect(await connection.manager.count(Book)).to.equal(books.length);
             await connection.close();
         });
-        it('exist', async () => {
-        });
 
         it('order by', async () => {
-        });
-
-        it('pages', async () => {
-        });
-        it('save and flush', async () => {
-        });
-        it('find all ids including deleted elements for irrelevant entities query select by entitiy only spec is reality', async () => {
+            let connection = await setUpTestConnection();
+            await initDb(connection);
+            let books1 = await connection.manager.find(Book, {
+                order: {
+                    title: "ASC"
+                }
+            });
+            expect(books1[0].title).to.equal(books[1].title);
+            expect(books1[1].title).to.equal(books[0].title);
+            await connection.close();
         });
     });
 });

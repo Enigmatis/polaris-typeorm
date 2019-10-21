@@ -37,6 +37,7 @@
     "ts-node-register": "^1.0.0",
     "chai": "^4.2.0",
     "pg": "^7.12.1",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "@enigmatis/polaris-logs": "^2.5.4"
   }
 }

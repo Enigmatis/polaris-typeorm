@@ -4,27 +4,25 @@ import {MoreThan} from "typeorm";
 import {PolarisContext} from "../common-polaris";
 
 export async function updateDataVersionInEntity<Entity>(polarisEntityManager: PolarisEntityManager) {
+    let logger = polarisEntityManager.logger;
     let polarisContext = polarisEntityManager.queryRunner.data.context;
-    if (!polarisContext) return;
-    let logger = polarisContext.logger;
-    logger ? logger.debug('Started data version job when inserting/updating entity') : {};
-    let dataVersionRepository = polarisEntityManager.getRepository(DataVersion);
-    let result = await dataVersionRepository.find();
-    if (result.length == 0) {
-        logger ? logger.debug('no data version found') : {};
-        await dataVersionRepository.save(new DataVersion(1));
-        logger ? logger.debug('data version created') : {};
+    logger.debug('Started data version job when inserting/updating entity', {context: polarisContext});
+    let result = await polarisEntityManager.findOne(DataVersion);
+    if (!result) {
+        logger.debug('no data version found', {context: polarisContext});
+        await polarisEntityManager.save(DataVersion, new DataVersion(1));
+        logger.debug('data version created', {context: polarisContext});
         polarisContext.globalDataVersion = 1;
     } else {
         if (!polarisContext.globalDataVersion) {
-            logger ? logger.debug('context does not hold data version') : {};
-            let oldDataVersion = result[0].value;
-            await dataVersionRepository.increment({}, 'value', 1);
+            logger.debug('context does not hold data version', {context: polarisContext});
+            let oldDataVersion = result.value;
+            await polarisEntityManager.increment(DataVersion, {}, 'value', 1);
             polarisContext.globalDataVersion = oldDataVersion + 1;
-            logger ? logger.debug('data version is incremented and holds new value ' + polarisContext.globalDataVersion) : {};
+            logger.debug('data version is incremented and holds new value ', {context: polarisContext});
         }
     }
-    logger ? logger.debug('Finished data version job when inserting/updating entity') : {};
+    logger.debug('Finished data version job when inserting/updating entity', {context: polarisContext});
 }
 
 export const dataVersionCriteria = (context: PolarisContext) =>

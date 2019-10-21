@@ -4,6 +4,7 @@ import {Author} from "../dal/author";
 import {createPolarisConnection} from "../../src/connections/create-connection";
 import {Profile} from "../dal/profile";
 import {User} from "../dal/user";
+// @ts-ignore
 import {PolarisGraphQLLogger} from "@enigmatis/polaris-graphql-logger"
 import {applicationLogProperties, connectionOptions, loggerConfig} from "./test-properties";
 import {PolarisConfig} from "../../src/common-polaris";
