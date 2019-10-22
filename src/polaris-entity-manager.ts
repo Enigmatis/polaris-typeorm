@@ -4,9 +4,9 @@ import {
 } from "typeorm";
 import {softDeleteRecursive} from "./handlers/soft-delete-handler";
 import {QueryDeepPartialEntity} from "typeorm/query-builder/QueryPartialEntity";
-import {updateDataVersion} from "./handlers/data-version-handler";
 import {TypeORMConfig, runAndMeasureTime} from "./common-polaris";
 import {findConditions, realityIdCriteria} from "./handlers/find-handler";
+import {DataVersionHandler} from "./handlers/data-version-handler";
 //todo: check if throw error logs an error in mgf
 //todo: typeorm not supporting exist
 //todo: paging in db
@@ -15,11 +15,13 @@ import {findConditions, realityIdCriteria} from "./handlers/find-handler";
 export class PolarisEntityManager extends EntityManager {
 
     config: TypeORMConfig;
+    dataVersionHandler: DataVersionHandler;
     logger: any;
 
     constructor(connection: Connection, config: TypeORMConfig, logger: any) {
         super(connection, connection.createQueryRunner());
         this.queryRunner.data = {context: {}};
+        this.dataVersionHandler = new DataVersionHandler(this);
         this.config = config;
         this.logger = logger;
     }
@@ -31,7 +33,7 @@ export class PolarisEntityManager extends EntityManager {
             if (entities.length > 0) {
                 if (this.config && this.config.softDelete && this.config.softDelete.allow == false) {
                     return await this.wrapTransaction(async () => {
-                        await updateDataVersion(this);
+                        await this.dataVersionHandler.updateDataVersion();
                         return await super.delete(targetOrEntity, criteria);
                     });
                 }
@@ -94,7 +96,7 @@ export class PolarisEntityManager extends EntityManager {
         let run = await runAndMeasureTime(async () => {
             if (targetOrEntity.toString().includes("CommonModel")) {
                 await this.wrapTransaction(async () => {
-                    await updateDataVersion(this);
+                    await this.dataVersionHandler.updateDataVersion();
                     await this.saveDataVersionAndRealityId(targetOrEntity, maybeEntityOrOptions);
                     // @ts-ignore
                     return await super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
@@ -115,7 +117,7 @@ export class PolarisEntityManager extends EntityManager {
     async update<Entity>(target: { new(): Entity } | Function | EntitySchema<Entity> | string, criteria: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | any, partialEntity: QueryDeepPartialEntity<Entity>): Promise<UpdateResult> {
         let run = await runAndMeasureTime(async () => {
             await this.wrapTransaction(async () => {
-                await updateDataVersion(this);
+                await this.dataVersionHandler.updateDataVersion();
                 partialEntity = {...partialEntity, ...{dataVersion: this.queryRunner.data.context.globalDataVersion}};
                 return super.update(target, criteria, partialEntity);
             });

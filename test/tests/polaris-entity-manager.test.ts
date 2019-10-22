@@ -157,18 +157,6 @@ describe('entity manager tests', async () => {
             }
             await connection.close();
         });
-    });
-    describe('works as expected tests', () => {
-
-        it('find one with id, act as expected', async () => {
-            let connection = await setUpTestConnection();
-            await initDb(connection);
-            const book = new Book('my book');
-            await connection.getRepository(Book).save(book);
-            let bookFound: Book = await connection.manager.findOne(Book, {where: {id: book.id}});
-            expect(book).to.deep.equal(bookFound);
-            await connection.close();
-        });
 
         it('save existing entity with different reality id, fail saving', async () => {
             let connection = await setUpTestConnection();
@@ -183,7 +171,18 @@ describe('entity manager tests', async () => {
             }
             await connection.close();
         });
+    });
+    it('find one with id, act as expected', async () => {
+        let connection = await setUpTestConnection();
+        await initDb(connection);
+        const book = new Book('my book');
+        await connection.getRepository(Book).save(book);
+        let bookFound: Book = await connection.manager.findOne(Book, {where: {id: book.id}});
+        expect(book).to.deep.equal(bookFound);
+        await connection.close();
+    });
 
+    describe('works as expected tests', () => {
         it('count, act as expected', async () => {
             let connection = await setUpTestConnection();
             await initDb(connection);

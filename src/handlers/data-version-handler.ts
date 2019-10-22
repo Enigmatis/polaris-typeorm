@@ -1,23 +1,33 @@
 import {PolarisEntityManager} from "../polaris-entity-manager";
 import {DataVersion} from "../models/data-version";
 
-export async function updateDataVersion<Entity>(polarisEntityManager: PolarisEntityManager) {
-    let logger = polarisEntityManager.logger;
-    let polarisContext = polarisEntityManager.queryRunner.data.context;
-    logger.debug('Started data version job when inserting/updating entity', {context: polarisContext});
-    let result = await polarisEntityManager.findOne(DataVersion);
-    if (!result) {
-        logger.debug('no data version found', {context: polarisContext});
-        await polarisEntityManager.save(DataVersion, new DataVersion(1));
-        logger.debug('data version created', {context: polarisContext});
-        polarisContext.globalDataVersion = 1;
-    } else {
-        if (!polarisContext.globalDataVersion) {
-            logger.debug('context does not hold data version', {context: polarisContext});
-            await polarisEntityManager.increment(DataVersion, {}, 'value', 1);
-            polarisContext.globalDataVersion = (await polarisEntityManager.findOne(DataVersion, {})).value + 1;
-            logger.debug('data version is incremented and holds new value ', {context: polarisContext});
-        }
+export class DataVersionHandler {
+    polarisEntityManager: PolarisEntityManager;
+    logger: any;
+
+    constructor(polarisEntityManager: PolarisEntityManager) {
+        this.polarisEntityManager = polarisEntityManager;
+        this.logger = polarisEntityManager.logger;
     }
-    logger.debug('Finished data version job when inserting/updating entity', {context: polarisContext});
+
+    async updateDataVersion<Entity>() {
+        let polarisContext = this.polarisEntityManager.queryRunner.data.context;
+        this.logger.debug('Started data version job when inserting/updating entity', {context: polarisContext});
+        let result = await this.polarisEntityManager.findOne(DataVersion);
+        if (!result) {
+            this.logger.debug('no data version found', {context: polarisContext});
+            await this.polarisEntityManager.save(DataVersion, new DataVersion(1));
+            this.logger.debug('data version created', {context: polarisContext});
+            polarisContext.globalDataVersion = 1;
+        } else {
+            if (!polarisContext.globalDataVersion) {
+                this.logger.debug('context does not hold data version', {context: polarisContext});
+                await this.polarisEntityManager.increment(DataVersion, {}, 'value', 1);
+                polarisContext.globalDataVersion = (await this.polarisEntityManager.findOne(DataVersion, {})).value + 1;
+                this.logger.debug('data version is incremented and holds new value ', {context: polarisContext});
+            }
+        }
+        this.logger.debug('Finished data version job when inserting/updating entity', {context: polarisContext});
+    }
+
 }
