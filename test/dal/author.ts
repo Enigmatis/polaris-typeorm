@@ -5,19 +5,15 @@ import {Book} from "./book";
 @Entity()
 export class Author extends CommonModel {
 
-    constructor(firstName?: string, lastName?: string, books?: Book[]) {
+    constructor(name?: string, books?: Book[]) {
         super();
-        firstName ? this.firstName = firstName : {};
-        lastName ? this.lastName = lastName : {};
+        name ? this.name = name : {};
         books ? this.books = books : {};
     }
 
     @Column()
-    firstName: string;
+    name: string;
 
-    @Column()
-    lastName: string;
-
-    @OneToMany(() => Book, (book) => book.author)
+    @OneToMany(() => Book, (books) => books.author)
     books: Book[];
 }

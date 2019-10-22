@@ -17,7 +17,7 @@ export interface PolarisContext {
     includeLinkedOper?: boolean;
 }
 
-export interface PolarisConfig {
+export interface TypeORMConfig {
     softDelete?: {
         allow?: boolean;
         returnEntities?: boolean;

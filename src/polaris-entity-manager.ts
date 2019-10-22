@@ -4,12 +4,9 @@ import {
 } from "typeorm";
 import {softDeleteRecursive} from "./handlers/soft-delete-handler";
 import {QueryDeepPartialEntity} from "typeorm/query-builder/QueryPartialEntity";
-import {DataVersion} from "./models/data-version";
-import {updateDataVersionInEntity} from "./handlers/data-version-handler";
-import {PolarisConfig, PolarisContext, runAndMeasureTime} from "./common-polaris";
-import {CommonModel} from "./models/common-model";
-import {realityIdCriteria} from "./handlers/reality-handler";
-import {findConditions} from "./handlers/find-handler";
+import {updateDataVersion} from "./handlers/data-version-handler";
+import {TypeORMConfig, runAndMeasureTime} from "./common-polaris";
+import {findConditions, realityIdCriteria} from "./handlers/find-handler";
 //todo: check if throw error logs an error in mgf
 //todo: typeorm not supporting exist
 //todo: paging in db
@@ -17,31 +14,26 @@ import {findConditions} from "./handlers/find-handler";
 //todo: find all ids including deleted elements for irrelevant entities query select by entitiy only spec is reality
 export class PolarisEntityManager extends EntityManager {
 
-    config: PolarisConfig;
+    config: TypeORMConfig;
     logger: any;
 
-    constructor(connection: Connection, config: PolarisConfig, logger: any) {
+    constructor(connection: Connection, config: TypeORMConfig, logger: any) {
         super(connection, connection.createQueryRunner());
         this.queryRunner.data = {context: {}};
         this.config = config;
         this.logger = logger;
     }
 
-    async delete<Entity extends CommonModel>(targetOrEntity: { new(): Entity } | Function | EntitySchema<Entity> | string, criteria: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | any): Promise<DeleteResult> {
+    async delete<Entity>(targetOrEntity: { new(): Entity } | Function | EntitySchema<Entity> | string, criteria: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | any): Promise<DeleteResult> {
         let run = await runAndMeasureTime(async () => {
-            criteria.where = {...criteria.where, ...realityIdCriteria(this.queryRunner.data.context)};
+            criteria.where = {...criteria.where, ...realityIdCriteria(this.queryRunner.data.context).where};
             let entities: Entity[] = await this.find(targetOrEntity, criteria);
             if (entities.length > 0) {
                 if (this.config && this.config.softDelete && this.config.softDelete.allow == false) {
-                    try {
-                        await this.queryRunner.startTransaction();
-                        await updateDataVersionInEntity(this);
-                        let deleteResult = await super.delete(targetOrEntity, criteria);
-                        await this.queryRunner.commitTransaction();
-                        return deleteResult;
-                    } catch (err) {
-                        await this.queryRunner.rollbackTransaction();
-                    }
+                    return await this.wrapTransaction(async () => {
+                        await updateDataVersion(this);
+                        return await super.delete(targetOrEntity, criteria);
+                    });
                 }
                 return await softDeleteRecursive(targetOrEntity, entities, this);
             } else {
@@ -57,8 +49,10 @@ export class PolarisEntityManager extends EntityManager {
 
     async findOne<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, idOrOptionsOrConditions?: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | FindOneOptions<Entity> | any, maybeOptions?: FindOneOptions<Entity>): Promise<Entity | undefined> {
         let run = await runAndMeasureTime(async () => {
+            let entityIsCommonModel = entityClass.toString().includes("CommonModel");
             // @ts-ignore
-            return super.findOne(entityClass, findConditions(this.queryRunner.data.context, this.config, idOrOptionsOrConditions), maybeOptions);
+            return super.findOne(entityClass, entityIsCommonModel ?
+                findConditions(this.queryRunner.data.context, this.config, idOrOptionsOrConditions) : idOrOptionsOrConditions, maybeOptions);
         });
         this.logger.debug('finished find one action successfully', {
             context: this.queryRunner.data.context,
@@ -69,10 +63,10 @@ export class PolarisEntityManager extends EntityManager {
 
     async find<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, optionsOrConditions?: FindManyOptions<Entity> | any): Promise<Entity[]> {
         let run = await runAndMeasureTime(async () => {
-            let entityClassType: any = entityClass;
+            let entityIsCommonModel = entityClass.toString().includes("CommonModel");
             // @ts-ignore
-            return super.find(entityClass,
-                entityClassType.name == "DataVersion" ? optionsOrConditions : findConditions(this.queryRunner.data.context, this.config, optionsOrConditions));
+            return super.find(entityClass, entityIsCommonModel ?
+                findConditions(this.queryRunner.data.context, this.config, optionsOrConditions) : optionsOrConditions);
         });
         this.logger.debug('finished find action successfully', {
             context: this.queryRunner.data.context,
@@ -85,7 +79,7 @@ export class PolarisEntityManager extends EntityManager {
     async count<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, optionsOrConditions?: FindManyOptions<Entity> | any): Promise<number> {
         let run = await runAndMeasureTime(() => {
             optionsOrConditions = optionsOrConditions ? optionsOrConditions : {};
-            optionsOrConditions.where = realityIdCriteria(this.queryRunner.data.context);
+            optionsOrConditions.where = realityIdCriteria(this.queryRunner.data.context).where;
             // @ts-ignore
             return super.count(entityClass, findConditions(this.queryRunner.data.context, this.config, optionsOrConditions));
         });
@@ -97,20 +91,17 @@ export class PolarisEntityManager extends EntityManager {
     }
 
     async save<Entity, T extends DeepPartial<Entity>>(targetOrEntity: (T | T[]) | ObjectType<Entity> | EntitySchema<Entity> | string, maybeEntityOrOptions?: T | T[], maybeOptions?: SaveOptions): Promise<T | T[]> {
-        let target: any = targetOrEntity;
         let run = await runAndMeasureTime(async () => {
-            if (target.name != "DataVersion") {
-                try {
-                    await this.queryRunner.startTransaction();
-                    await this.saveDataVersionAndRealityId(target, maybeEntityOrOptions);
-                    let save = await super.save(target, maybeEntityOrOptions, maybeOptions);
-                    await this.queryRunner.commitTransaction();
-                    return save;
-                } catch (err) {
-                    await this.queryRunner.rollbackTransaction();
-                }
+            if (targetOrEntity.toString().includes("CommonModel")) {
+                await this.wrapTransaction(async () => {
+                    await updateDataVersion(this);
+                    await this.saveDataVersionAndRealityId(targetOrEntity, maybeEntityOrOptions);
+                    // @ts-ignore
+                    return await super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
+                });
             } else {
-                return await super.save(target, maybeEntityOrOptions, maybeOptions);
+                // @ts-ignore
+                return await super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
             }
         });
         this.logger.debug('finished save action successfully', {
@@ -123,16 +114,11 @@ export class PolarisEntityManager extends EntityManager {
 
     async update<Entity>(target: { new(): Entity } | Function | EntitySchema<Entity> | string, criteria: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | any, partialEntity: QueryDeepPartialEntity<Entity>): Promise<UpdateResult> {
         let run = await runAndMeasureTime(async () => {
-            try {
-                await this.queryRunner.startTransaction();
-                await updateDataVersionInEntity(this);
+            await this.wrapTransaction(async () => {
+                await updateDataVersion(this);
                 partialEntity = {...partialEntity, ...{dataVersion: this.queryRunner.data.context.globalDataVersion}};
-                let updateResult = super.update(target, criteria, partialEntity);
-                await this.queryRunner.commitTransaction();
-                return updateResult;
-            } catch (err) {
-                await this.queryRunner.rollbackTransaction();
-            }
+                return super.update(target, criteria, partialEntity);
+            });
         });
         this.logger.debug('finished update action successfully', {
             context: this.queryRunner.data.context,
@@ -141,8 +127,18 @@ export class PolarisEntityManager extends EntityManager {
         return run.returnValue;
     }
 
+    async wrapTransaction(action: any) {
+        try {
+            await this.queryRunner.startTransaction();
+            let result = await action();
+            await this.queryRunner.commitTransaction();
+            return result;
+        } catch (err) {
+            return await this.queryRunner.rollbackTransaction();
+        }
+    }
+
     async saveDataVersionAndRealityId(targetOrEntity: any, maybeEntityOrOptions?: any) {
-        await updateDataVersionInEntity(this);
         if (maybeEntityOrOptions instanceof Array) {
             for (let t of maybeEntityOrOptions) {
                 t.dataVersion = this.queryRunner.data.context.globalDataVersion;
@@ -154,12 +150,11 @@ export class PolarisEntityManager extends EntityManager {
         }
     }
 
-    setRealityIdOfEntity<Entity extends CommonModel>(entity: Entity) {
-        let realityId = this.queryRunner.data.context.realityId;
-        realityId = realityId ? realityId : 0;
-        if (entity.realityId === undefined || entity.realityId == realityId) {
-            entity.realityId = realityId
-        } else {
+    setRealityIdOfEntity(entity) {
+        let realityIdFromHeader = this.queryRunner.data.context.realityId ? this.queryRunner.data.context.realityId : 0;
+        if (entity.realityId === undefined) {
+            entity.realityId = realityIdFromHeader;
+        } else if (entity.realityId != realityIdFromHeader) {
             throw new Error('reality id of entity is different from header');
         }
     }
