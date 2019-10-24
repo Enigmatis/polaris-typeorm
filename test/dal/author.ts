@@ -1,4 +1,4 @@
-import {CommonModel} from "../../index";
+import {CommonModel} from "../../src";
 import {Column, Entity, OneToMany} from "typeorm";
 import {Book} from "./book";
 
