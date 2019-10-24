@@ -5,8 +5,9 @@ import {
 import {softDeleteRecursive} from "./handlers/soft-delete-handler";
 import {QueryDeepPartialEntity} from "typeorm/query-builder/QueryPartialEntity";
 import {TypeORMConfig, runAndMeasureTime} from "./common-polaris";
-import {findConditions, realityIdCriteria} from "./handlers/find-handler";
+import {FindHandler} from "./handlers/find-handler";
 import {DataVersionHandler} from "./handlers/data-version-handler";
+
 //todo: check if throw error logs an error in mgf
 //todo: typeorm not supporting exist
 //todo: paging in db
@@ -16,25 +17,33 @@ export class PolarisEntityManager extends EntityManager {
 
     config: TypeORMConfig;
     dataVersionHandler: DataVersionHandler;
+    findHandler: FindHandler;
     logger: any;
 
     constructor(connection: Connection, config: TypeORMConfig, logger: any) {
         super(connection, connection.createQueryRunner());
         this.queryRunner.data = {context: {}};
-        this.dataVersionHandler = new DataVersionHandler(this);
-        this.config = config;
         this.logger = logger;
+        this.config = config;
+        this.dataVersionHandler = new DataVersionHandler(this);
+        this.findHandler = new FindHandler(this);
+    }
+
+    calculateCriteria(target, includeLinkedOper, criteria) {
+        return target.toString().includes("CommonModel") ?
+            this.findHandler.findConditions(includeLinkedOper, criteria) : criteria;
     }
 
     async delete<Entity>(targetOrEntity: { new(): Entity } | Function | EntitySchema<Entity> | string, criteria: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | any): Promise<DeleteResult> {
         let run = await runAndMeasureTime(async () => {
-            criteria.where = {...criteria.where, ...realityIdCriteria(this.queryRunner.data.context).where};
-            let entities: Entity[] = await this.find(targetOrEntity, criteria);
+            let calculatedCriteria = this.calculateCriteria(targetOrEntity, false, criteria);
+            // @ts-ignore
+            let entities: Entity[] = await super.find(targetOrEntity, calculatedCriteria);
             if (entities.length > 0) {
                 if (this.config && this.config.softDelete && this.config.softDelete.allow == false) {
                     return await this.wrapTransaction(async () => {
                         await this.dataVersionHandler.updateDataVersion();
-                        return await super.delete(targetOrEntity, criteria);
+                        return await super.delete(targetOrEntity, calculatedCriteria);
                     });
                 }
                 return await softDeleteRecursive(targetOrEntity, entities, this);
@@ -51,10 +60,8 @@ export class PolarisEntityManager extends EntityManager {
 
     async findOne<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, idOrOptionsOrConditions?: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | FindOneOptions<Entity> | any, maybeOptions?: FindOneOptions<Entity>): Promise<Entity | undefined> {
         let run = await runAndMeasureTime(async () => {
-            let entityIsCommonModel = entityClass.toString().includes("CommonModel");
             // @ts-ignore
-            return super.findOne(entityClass, entityIsCommonModel ?
-                findConditions(this.queryRunner.data.context, this.config, idOrOptionsOrConditions) : idOrOptionsOrConditions, maybeOptions);
+            return super.findOne(entityClass, this.calculateCriteria(entityClass, true, idOrOptionsOrConditions), maybeOptions);
         });
         this.logger.debug('finished find one action successfully', {
             context: this.queryRunner.data.context,
@@ -65,10 +72,8 @@ export class PolarisEntityManager extends EntityManager {
 
     async find<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, optionsOrConditions?: FindManyOptions<Entity> | any): Promise<Entity[]> {
         let run = await runAndMeasureTime(async () => {
-            let entityIsCommonModel = entityClass.toString().includes("CommonModel");
             // @ts-ignore
-            return super.find(entityClass, entityIsCommonModel ?
-                findConditions(this.queryRunner.data.context, this.config, optionsOrConditions) : optionsOrConditions);
+            return super.find(entityClass, this.calculateCriteria(entityClass, true, optionsOrConditions));
         });
         this.logger.debug('finished find action successfully', {
             context: this.queryRunner.data.context,
@@ -79,11 +84,9 @@ export class PolarisEntityManager extends EntityManager {
 
 
     async count<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, optionsOrConditions?: FindManyOptions<Entity> | any): Promise<number> {
-        let run = await runAndMeasureTime(() => {
-            optionsOrConditions = optionsOrConditions ? optionsOrConditions : {};
-            optionsOrConditions.where = realityIdCriteria(this.queryRunner.data.context).where;
+        let run = await runAndMeasureTime(async () => {
             // @ts-ignore
-            return super.count(entityClass, findConditions(this.queryRunner.data.context, this.config, optionsOrConditions));
+            return super.count(entityClass, this.calculateCriteria(entityClass, false, optionsOrConditions));
         });
         this.logger.debug('finished count action successfully', {
             context: this.queryRunner.data.context,
