@@ -2,7 +2,8 @@
   "name": "@enigmatis/polaris-typeorm",
   "version": "0.0.1",
   "description": "support for typeorm in polaris",
-  "main": "src/index.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "test": "mocha -r ts-node/register test/**/*.test.ts --timeout 15000",
     "build": "rimraf dist && tsc -p tsconfig.json",
@@ -64,7 +65,6 @@
   "devDependencies": {
     "@commitlint/cli": "^8.2.0",
     "@commitlint/config-conventional": "^8.2.0",
-    "@enigmatis/polaris-logs": "^2.5.4",
     "@semantic-release/changelog": "^3.0.4",
     "@semantic-release/git": "^7.0.16",
     "@types/chai": "^4.2.1",
