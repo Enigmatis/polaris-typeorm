@@ -8,7 +8,7 @@ import {
     initDb,
     profile,
     setUpTestConnection,
-    user, setContext
+    user, setContext, tearDownTestConnection
 } from "../utils/set-up";
 import {Author} from "../dal/author";
 import {User} from "../dal/user";
@@ -33,6 +33,7 @@ describe('entity manager tests', async () => {
         connection = await setUpTestConnection();
     });
     afterEach(async () => {
+        await tearDownTestConnection(connection);
         await connection.close();
     });
     describe('soft delete tests', () => {
