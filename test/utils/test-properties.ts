@@ -6,7 +6,7 @@ import {ApplicationLogProperties, LoggerConfiguration} from "@enigmatis/polaris-
 const path = require('path');
 export const connectionOptions: ConnectionOptions = {
     type: "postgres",
-    url: process.env.CONNECTION_STRING ? process.env.connectionString : "",
+    url: process.env.CONNECTION_STRING ? process.env.CONNECTION_STRING : "",
     entities: [
         path.resolve(__dirname, '..') + '/dal/*.ts',
         CommonModel,
