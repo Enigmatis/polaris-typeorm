@@ -48,7 +48,7 @@ describe('soft delete handler tests', async () => {
         connection.manager.config = {softDelete: {returnEntities: true}};
         await initDb(connection);
         let user: User | undefined = await connection.manager.findOne(User, {
-            where: userCriteria,
+            ...userCriteria,
             relations: ["profile"]
         });
         await softDeleteHandler.softDeleteRecursive(User, user);
@@ -62,7 +62,7 @@ describe('soft delete handler tests', async () => {
         connection.manager.config = {softDelete: {returnEntities: true}};
         await initDb(connection);
         let authorWithCascade: Author | undefined = await connection.manager.findOne(Author, {
-            where: authorWithCascadeCriteria,
+            ...authorWithCascadeCriteria,
             relations: ["books"]
         });
         await softDeleteHandler.softDeleteRecursive(Author, authorWithCascade);

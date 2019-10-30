@@ -48,7 +48,7 @@ describe('entity manager tests', async () => {
             await initDb(connection);
             await connection.manager.delete(Profile, profileCriteria);
             let user: User | undefined = await connection.manager.findOne(User, {
-                where: userCriteria,
+                ...userCriteria,
                 relations: ["profile"]
             });
             user ? expect(user.deleted).to.be.false : expect(user).to.not.be.undefined;
