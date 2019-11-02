@@ -65,8 +65,7 @@ describe('entity manager tests', async () => {
 
         // checks soft delete allow false
         it('delete entity, soft delete allow is false and return deleted entities true, doesnt return deleted entity', async () => {
-            // @ts-ignore
-            connection.manager.config = {softDelete: {returnEntities: true, allow: false}};
+            Object.assign(connection.options, {extra: {config: {softDelete: {returnEntities: true, allow: false}}}});
             await initDb(connection);
             await connection.manager.delete(Author, testAuthorCriteria);
             let author: Author | undefined = await connection.manager.findOne(Author, testAuthorCriteria);
@@ -76,8 +75,7 @@ describe('entity manager tests', async () => {
         // checks soft delete allow false with cascade
         it('delete entity, soft delete allow is false and return deleted entities true and cascade is true,' +
             ' doesnt return deleted entity and its linked entity', async () => {
-            // @ts-ignore
-            connection.manager.config = {softDelete: {returnEntities: true, allow: false}};
+            Object.assign(connection.options, {extra: {config: {softDelete: {returnEntities: true, allow: false}}}});
             await initDb(connection);
             await connection.manager.delete(Author, authorWithCascadeCriteria);
             let bookWithCascade: Book | undefined = await connection.manager.findOne(Book, bookWithCascadeCriteria);
@@ -107,7 +105,7 @@ describe('entity manager tests', async () => {
             setContext(connection, {realityId: 1});
             await connection.manager.save(Book, bookFail);
             let dv = await connection.manager.findOne(DataVersion);
-            let bookSaved = await connection.manager.findOne(Book, bookFail);
+            let bookSaved = await connection.manager.findOne(Book, {where:{title:bookFail.title}});
             dv ? expect(dv.value).to.equal(1) : expect(dv).to.not.be.undefined;
             expect(bookSaved).to.be.undefined;
         });
