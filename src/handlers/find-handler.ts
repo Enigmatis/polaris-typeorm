@@ -1,36 +1,42 @@
-import {Connection, EntityManager, MoreThan} from "typeorm";
-import {PolarisBaseContext} from "@enigmatis/polaris-common";
-
+import { PolarisBaseContext } from '@enigmatis/polaris-common';
+import { Connection, EntityManager, MoreThan } from 'typeorm';
 
 const softDeleteCriteria = (connection: Connection) => {
-    let config = connection.options.extra.config;
+    const config = connection.options.extra.config;
     return config && config.softDelete && config.softDelete.returnEntities ? undefined : false;
 };
 
 const dataVersionCriteria = (context: PolarisBaseContext) =>
-    context.dataVersion != undefined ? MoreThan(context.dataVersion) : undefined;
+    context.dataVersion !== undefined ? MoreThan(context.dataVersion) : undefined;
 
 const realityIdCriteria = (includeLinkedOper: boolean, context: PolarisBaseContext) =>
-    includeLinkedOper && context.realityId != 0 && context.includeLinkedOper ? [context.realityId, 0] : context.realityId || 0;
-
+    includeLinkedOper && context.realityId !== 0 && context.includeLinkedOper
+        ? [context.realityId, 0]
+        : context.realityId || 0;
 
 export class FindHandler {
-    manager: EntityManager;
+    private manager: EntityManager;
 
     constructor(manager: EntityManager) {
         this.manager = manager;
     }
 
-    findConditions(includeLinkedOper: boolean, optionsOrConditions?: any) {
-        let context = this.manager.queryRunner ? this.manager.queryRunner.data.context : {};
-        let polarisCriteria = optionsOrConditions || {};
-        let riCriteria = realityIdCriteria(includeLinkedOper, context);
-        let dvCriteria = dataVersionCriteria(context);
-        let sdCriteria = softDeleteCriteria(this.manager.connection);
-        polarisCriteria.where || (polarisCriteria.where = {});
+    public findConditions(includeLinkedOper: boolean, optionsOrConditions?: any) {
+        const context = this.manager.queryRunner ? this.manager.queryRunner.data.context : {};
+        const polarisCriteria = optionsOrConditions || {};
+        const riCriteria = realityIdCriteria(includeLinkedOper, context);
+        const dvCriteria = dataVersionCriteria(context);
+        const sdCriteria = softDeleteCriteria(this.manager.connection);
+        if (!polarisCriteria.where) {
+            polarisCriteria.where = {};
+        }
         polarisCriteria.where.realityId = riCriteria;
-        dvCriteria === undefined ? delete polarisCriteria.where.dataVersion : polarisCriteria.where.dataVersion = dvCriteria;
-        sdCriteria === undefined ? delete polarisCriteria.where.deleted : polarisCriteria.where.deleted = sdCriteria;
+        dvCriteria === undefined
+            ? delete polarisCriteria.where.dataVersion
+            : (polarisCriteria.where.dataVersion = dvCriteria);
+        sdCriteria === undefined
+            ? delete polarisCriteria.where.deleted
+            : (polarisCriteria.where.deleted = sdCriteria);
         return polarisCriteria;
     }
 }

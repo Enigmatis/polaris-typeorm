@@ -1,142 +1,226 @@
+import { runAndMeasureTime } from '@enigmatis/polaris-common';
 import {
-    Connection, DeepPartial, DeleteResult, EntityManager, EntitySchema,
-    FindManyOptions, FindOneOptions, ObjectID, SaveOptions, UpdateResult
-} from "typeorm";
-import {FindHandler} from "./handlers/find-handler";
-import {DataVersionHandler} from "./handlers/data-version-handler";
-import {SoftDeleteHandler} from "./handlers/soft-delete-handler";
-import {runAndMeasureTime} from "@enigmatis/polaris-common";
+    Connection,
+    DeepPartial,
+    DeleteResult,
+    EntityManager,
+    FindManyOptions,
+    FindOneOptions,
+    ObjectID,
+    SaveOptions,
+    UpdateResult,
+} from 'typeorm';
+import { DataVersionHandler } from './handlers/data-version-handler';
+import { FindHandler } from './handlers/find-handler';
+import { SoftDeleteHandler } from './handlers/soft-delete-handler';
 
 export class PolarisEntityManager extends EntityManager {
-
-    dataVersionHandler: DataVersionHandler;
-    findHandler: FindHandler;
-    softDeleteHandler: SoftDeleteHandler;
+    private dataVersionHandler: DataVersionHandler;
+    private findHandler: FindHandler;
+    private softDeleteHandler: SoftDeleteHandler;
 
     constructor(connection: Connection) {
         super(connection, connection.createQueryRunner());
-        this.queryRunner && (this.queryRunner.data = {context: {}});
+        if (this.queryRunner) {
+            this.queryRunner.data = { context: {} };
+        }
         this.dataVersionHandler = new DataVersionHandler(this);
         this.findHandler = new FindHandler(this);
         this.softDeleteHandler = new SoftDeleteHandler(this);
     }
 
-    getContext = () => {
-        return this.queryRunner ? this.queryRunner.data.context : {}
-    };
-
-    calculateCriteria(target: any, includeLinkedOper: boolean, criteria: any) {
-        return target.toString().includes("CommonModel") ?
-            this.findHandler.findConditions(includeLinkedOper, criteria) : criteria;
-    }
-
-
-    async delete<Entity>(targetOrEntity: any, criteria: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | any): Promise<DeleteResult> {
-        let run = await runAndMeasureTime(async () => {
-            let calculatedCriteria: FindManyOptions = this.calculateCriteria(targetOrEntity, false, criteria);
-            let metadata = this.connection.entityMetadatas.find(meta => meta.target == targetOrEntity);
-            metadata ? calculatedCriteria.relations = metadata.relations.map(relation => relation.propertyName) : {};
-            let entities: Entity[] = await super.find(targetOrEntity, calculatedCriteria);
+    public async delete<Entity>(
+        targetOrEntity: any,
+        criteria:
+            | string
+            | string[]
+            | number
+            | number[]
+            | Date
+            | Date[]
+            | ObjectID
+            | ObjectID[]
+            | any,
+    ): Promise<DeleteResult> {
+        const run = await runAndMeasureTime(async () => {
+            const calculatedCriteria: FindManyOptions = this.calculateCriteria(
+                targetOrEntity,
+                false,
+                criteria,
+            );
+            const metadata = this.connection.entityMetadatas.find(
+                meta => meta.target === targetOrEntity,
+            );
+            if (metadata) {
+                calculatedCriteria.relations = metadata.relations.map(
+                    relation => relation.propertyName,
+                );
+            }
+            const entities: Entity[] = await super.find(targetOrEntity, calculatedCriteria);
             if (entities.length > 0) {
-                let config = this.connection.options.extra.config;
-                if (config && config.softDelete && config.softDelete.allow == false) {
-                    return await this.wrapTransaction(async () => {
+                const config = this.connection.options.extra.config;
+                if (config && config.softDelete && config.softDelete.allow === false) {
+                    return this.wrapTransaction(async () => {
                         await this.dataVersionHandler.updateDataVersion();
-                        return await super.delete(targetOrEntity, calculatedCriteria);
+                        return super.delete(targetOrEntity, calculatedCriteria);
                     });
                 }
-                return await this.softDeleteHandler.softDeleteRecursive(targetOrEntity, entities);
+                return this.softDeleteHandler.softDeleteRecursive(targetOrEntity, entities);
             } else {
                 throw new Error('there are no entities to delete');
             }
         });
-        this.queryRunner && (this.queryRunner.data.elapsedTime = run.time);
-        this.connection.logger.log("log", 'finished delete action successfully', this.queryRunner);
+        if (this.queryRunner) {
+            this.queryRunner.data.elapsedTime = run.time;
+        }
+        this.connection.logger.log('log', 'finished delete action successfully', this.queryRunner);
         return run.returnValue;
     }
 
-    async findOne<Entity>(entityClass: any, idOrOptionsOrConditions?: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | FindOneOptions<Entity> | any, maybeOptions?: FindOneOptions<Entity>): Promise<Entity | undefined> {
-        let run = await runAndMeasureTime(async () => {
-            return super.findOne(entityClass, this.calculateCriteria(entityClass, true, idOrOptionsOrConditions), maybeOptions);
+    public async findOne<Entity>(
+        entityClass: any,
+        idOrOptionsOrConditions?:
+            | string
+            | string[]
+            | number
+            | number[]
+            | Date
+            | Date[]
+            | ObjectID
+            | ObjectID[]
+            | FindOneOptions<Entity>
+            | any,
+        maybeOptions?: FindOneOptions<Entity>,
+    ): Promise<Entity | undefined> {
+        const run = await runAndMeasureTime(async () => {
+            return super.findOne(
+                entityClass,
+                this.calculateCriteria(entityClass, true, idOrOptionsOrConditions),
+                maybeOptions,
+            );
         });
-        this.queryRunner && (this.queryRunner.data.elapsedTime = run.time);
-        this.connection.logger.log("log", 'finished find one action successfully', this.queryRunner);
+        if (this.queryRunner) {
+            this.queryRunner.data.elapsedTime = run.time;
+        }
+        this.connection.logger.log(
+            'log',
+            'finished find one action successfully',
+            this.queryRunner,
+        );
         return run.returnValue;
     }
 
-    async find<Entity>(entityClass: any, optionsOrConditions?: FindManyOptions<Entity> | any): Promise<Entity[]> {
-        let run = await runAndMeasureTime(async () => {
-            return super.find(entityClass, this.calculateCriteria(entityClass, true, optionsOrConditions));
+    public async find<Entity>(
+        entityClass: any,
+        optionsOrConditions?: FindManyOptions<Entity> | any,
+    ): Promise<Entity[]> {
+        const run = await runAndMeasureTime(async () => {
+            return super.find(
+                entityClass,
+                this.calculateCriteria(entityClass, true, optionsOrConditions),
+            );
         });
-        this.queryRunner && (this.queryRunner.data.elapsedTime = run.time);
-        this.connection.logger.log("log", 'finished find action successfully', this.queryRunner);
+        if (this.queryRunner) {
+            this.queryRunner.data.elapsedTime = run.time;
+        }
+        this.connection.logger.log('log', 'finished find action successfully', this.queryRunner);
         return run.returnValue;
     }
 
-    async count<Entity>(entityClass: any, optionsOrConditions?: FindManyOptions<Entity> | any): Promise<number> {
-        let run = await runAndMeasureTime(async () => {
-            return super.count(entityClass, this.calculateCriteria(entityClass, false, optionsOrConditions));
+    public async count<Entity>(
+        entityClass: any,
+        optionsOrConditions?: FindManyOptions<Entity> | any,
+    ): Promise<number> {
+        const run = await runAndMeasureTime(async () => {
+            return super.count(
+                entityClass,
+                this.calculateCriteria(entityClass, false, optionsOrConditions),
+            );
         });
-        this.queryRunner && (this.queryRunner.data.elapsedTime = run.time);
-        this.connection.logger.log("log", 'finished count action successfully', this.queryRunner);
+        if (this.queryRunner) {
+            this.queryRunner.data.elapsedTime = run.time;
+        }
+        this.connection.logger.log('log', 'finished count action successfully', this.queryRunner);
         return run.returnValue;
     }
 
-    async save<Entity, T extends DeepPartial<Entity>>(targetOrEntity: any, maybeEntityOrOptions?: T | T[], maybeOptions?: SaveOptions): Promise<T | T[]> {
-        let run = await runAndMeasureTime(async () => {
-            if (targetOrEntity.toString().includes("CommonModel")) {
+    public async save<Entity, T extends DeepPartial<Entity>>(
+        targetOrEntity: any,
+        maybeEntityOrOptions?: T | T[],
+        maybeOptions?: SaveOptions,
+    ): Promise<T | T[]> {
+        const run = await runAndMeasureTime(async () => {
+            if (targetOrEntity.toString().includes('CommonModel')) {
                 await this.wrapTransaction(async () => {
                     await this.dataVersionHandler.updateDataVersion();
-                    await this.saveDataVersionAndRealityId(targetOrEntity, maybeEntityOrOptions);
-                    return await super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
+                    await this.saveDataVersionAndRealityId(maybeEntityOrOptions);
+                    return super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
                 });
             } else {
-                return await super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
+                return super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
             }
         });
-        this.queryRunner && (this.queryRunner.data.elapsedTime = run.time);
-        this.connection.logger.log("log", 'finished save action successfully', this.queryRunner);
+        if (this.queryRunner) {
+            this.queryRunner.data.elapsedTime = run.time;
+        }
+        this.connection.logger.log('log', 'finished save action successfully', this.queryRunner);
         return run.returnValue;
     }
 
-    async update<Entity>(target: { new(): Entity } | Function | EntitySchema<Entity> | string, criteria: string | string[] | number | number[] | Date | Date[] | ObjectID | ObjectID[] | any, partialEntity: any): Promise<UpdateResult> {
-
-        let run = await runAndMeasureTime(async () => {
+    public async update<Entity>(
+        target: any,
+        criteria:
+            | string
+            | string[]
+            | number
+            | number[]
+            | Date
+            | Date[]
+            | ObjectID
+            | ObjectID[]
+            | any,
+        partialEntity: any,
+    ): Promise<UpdateResult> {
+        const run = await runAndMeasureTime(async () => {
             await this.wrapTransaction(async () => {
                 await this.dataVersionHandler.updateDataVersion();
-                let globalDataVersion = this.getContext().globalDataVersion;
-                partialEntity = {...partialEntity, ...{dataVersion: globalDataVersion}};
+                const globalDataVersion = this.getContext().globalDataVersion;
+                partialEntity = { ...partialEntity, ...{ dataVersion: globalDataVersion } };
                 return super.update(target, criteria, partialEntity);
             });
         });
-        this.queryRunner && (this.queryRunner.data.elapsedTime = run.time);
-        this.connection.logger.log("log", 'finished update action successfully', this.queryRunner);
+        if (this.queryRunner) {
+            this.queryRunner.data.elapsedTime = run.time;
+        }
+        this.connection.logger.log('log', 'finished update action successfully', this.queryRunner);
         return run.returnValue;
     }
 
-    async wrapTransaction(action: any) {
-        let runner: any = this.queryRunner;
+    private async wrapTransaction(action: any) {
+        const runner: any = this.queryRunner;
         try {
             let transactionStartedByUs = false;
             if (!runner.isTransactionActive) {
                 await runner.startTransaction();
                 transactionStartedByUs = true;
             }
-            let result = await action();
+            const result = await action();
             if (transactionStartedByUs) {
                 await runner.commitTransaction();
             }
             return result;
         } catch (err) {
-            this.queryRunner && (this.queryRunner.data.logError = true);
-            this.connection.logger.log("log", err.message, this.queryRunner);
-            return await runner.rollbackTransaction();
+            if (this.queryRunner) {
+                this.queryRunner.data.logError = true;
+            }
+            this.connection.logger.log('log', err.message, this.queryRunner);
+            await runner.rollbackTransaction();
         }
     }
 
-    async saveDataVersionAndRealityId(targetOrEntity: any, maybeEntityOrOptions?: any) {
+    private async saveDataVersionAndRealityId(maybeEntityOrOptions?: any) {
         if (maybeEntityOrOptions instanceof Array) {
-            for (let t of maybeEntityOrOptions) {
+            for (const t of maybeEntityOrOptions) {
                 t.dataVersion = this.getContext().globalDataVersion;
                 this.setRealityIdOfEntity(t);
             }
@@ -146,12 +230,22 @@ export class PolarisEntityManager extends EntityManager {
         }
     }
 
-    setRealityIdOfEntity(entity: any) {
-        let realityIdFromHeader = this.getContext().realityId || 0;
+    private setRealityIdOfEntity(entity: any) {
+        const realityIdFromHeader = this.getContext().realityId || 0;
         if (entity.realityId === undefined) {
             entity.realityId = realityIdFromHeader;
-        } else if (entity.realityId != realityIdFromHeader) {
+        } else if (entity.realityId !== realityIdFromHeader) {
             throw new Error('reality id of entity is different from header');
         }
+    }
+
+    private getContext = () => {
+        return this.queryRunner ? this.queryRunner.data.context : {};
+    };
+
+    private calculateCriteria(target: any, includeLinkedOper: boolean, criteria: any) {
+        return target.toString().includes('CommonModel')
+            ? this.findHandler.findConditions(includeLinkedOper, criteria)
+            : criteria;
     }
 }
