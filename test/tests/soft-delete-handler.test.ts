@@ -1,6 +1,6 @@
 import {SoftDeleteHandler} from "../../src/handlers/soft-delete-handler";
 import {Library} from "../dal/library";
-import {initDb, setUpTestConnection, tearDownTestConnection} from "../utils/set-up";
+import {initDb, setUpTestConnection} from "../utils/set-up";
 import {Connection} from "typeorm";
 import {Book} from "../dal/book";
 import {Author} from "../dal/author";
@@ -17,7 +17,6 @@ describe('soft delete handler tests', async () => {
         softDeleteHandler = new SoftDeleteHandler(connection.manager);
     });
     afterEach(async () => {
-        await tearDownTestConnection(connection);
         await connection.close();
     });
 

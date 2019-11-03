@@ -4,22 +4,20 @@ import {Author} from "../dal/author";
 import {Profile} from "../dal/profile";
 import {User} from "../dal/user";
 import {applicationLogProperties, connectionOptions, loggerConfig} from "./test-properties";
-import {PolarisContext} from "../../src/common-polaris";
 import {Library} from "../dal/library";
 import {createPolarisConnection} from "../../src";
 import {PolarisLogger} from "@enigmatis/polaris-logs";
+import {PolarisBaseContext} from "@enigmatis/polaris-common"
 
 
 export const setUpTestConnection = async (): Promise<Connection> => {
     const polarisGraphQLLogger = await new PolarisLogger(applicationLogProperties, loggerConfig);
-    return await createPolarisConnection(connectionOptions, polarisGraphQLLogger);
-};
-
-export const tearDownTestConnection = async (connection: Connection) => {
-    let tables = ["book", "library", "author", "user", "profile", "dataVersion"];
+    let connection = await createPolarisConnection(connectionOptions, polarisGraphQLLogger);
+    let tables = ['user', 'profile', 'book', 'author', 'library', 'dataVersion'];
     for (const table of tables) {
-        connection.manager && connection.manager.queryRunner ? await connection.manager.queryRunner.dropTable(table) : {};
+        connection.manager && await connection.manager.getRepository(table).query("DELETE FROM \"" + table + "\";");
     }
+    return connection;
 };
 
 export const profile = new Profile("female");
@@ -42,12 +40,12 @@ export const initDb = async (connection: Connection) => {
     await connection.manager.save(Library, new Library("public", [cbBook]));
 };
 
-export function setContext(connection: Connection, context?: PolarisContext): void {
+export function setContext(connection: Connection, context?: PolarisBaseContext): void {
     connection.manager.queryRunner &&
     (connection.manager.queryRunner.data.context = context || {});
 }
 
-export function getContext(connection: Connection): PolarisContext {
+export function getContext(connection: Connection): PolarisBaseContext {
     return !connection.manager.queryRunner ||
         connection.manager.queryRunner.data.context;
 }

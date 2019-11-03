@@ -1,5 +1,5 @@
-import {PolarisContext} from "../common-polaris";
 import {Connection, EntityManager, MoreThan} from "typeorm";
+import {PolarisBaseContext} from "@enigmatis/polaris-common";
 
 
 const softDeleteCriteria = (connection: Connection) => {
@@ -7,10 +7,10 @@ const softDeleteCriteria = (connection: Connection) => {
     return config && config.softDelete && config.softDelete.returnEntities ? undefined : false;
 };
 
-const dataVersionCriteria = (context: PolarisContext) =>
+const dataVersionCriteria = (context: PolarisBaseContext) =>
     context.dataVersion != undefined ? MoreThan(context.dataVersion) : undefined;
 
-const realityIdCriteria = (includeLinkedOper: boolean, context: PolarisContext) =>
+const realityIdCriteria = (includeLinkedOper: boolean, context: PolarisBaseContext) =>
     includeLinkedOper && context.realityId != 0 && context.includeLinkedOper ? [context.realityId, 0] : context.realityId || 0;
 
 

@@ -2,16 +2,11 @@ import {
     Connection, DeepPartial, DeleteResult, EntityManager, EntitySchema,
     FindManyOptions, FindOneOptions, ObjectID, SaveOptions, UpdateResult
 } from "typeorm";
-import {runAndMeasureTime} from "./common-polaris";
 import {FindHandler} from "./handlers/find-handler";
 import {DataVersionHandler} from "./handlers/data-version-handler";
 import {SoftDeleteHandler} from "./handlers/soft-delete-handler";
+import {runAndMeasureTime} from "@enigmatis/polaris-common";
 
-//todo: check if throw error logs an error in mgf
-//todo: typeorm not supporting exist
-//todo: paging in db
-//todo: saveandflush
-//todo: find all ids including deleted elements for irrelevant entities query select by entitiy only spec is reality
 export class PolarisEntityManager extends EntityManager {
 
     dataVersionHandler: DataVersionHandler;
@@ -26,7 +21,9 @@ export class PolarisEntityManager extends EntityManager {
         this.softDeleteHandler = new SoftDeleteHandler(this);
     }
 
-    getContext = () => { return this.queryRunner? this.queryRunner.data.context: {}};
+    getContext = () => {
+        return this.queryRunner ? this.queryRunner.data.context : {}
+    };
 
     calculateCriteria(target: any, includeLinkedOper: boolean, criteria: any) {
         return target.toString().includes("CommonModel") ?
@@ -75,7 +72,6 @@ export class PolarisEntityManager extends EntityManager {
         this.connection.logger.log("log", 'finished find action successfully', this.queryRunner);
         return run.returnValue;
     }
-
 
     async count<Entity>(entityClass: any, optionsOrConditions?: FindManyOptions<Entity> | any): Promise<number> {
         let run = await runAndMeasureTime(async () => {
