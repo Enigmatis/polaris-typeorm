@@ -52,7 +52,7 @@ describe('entity manager tests', async () => {
                 relations: ["profile"]
             });
             user ? expect(user.deleted).to.be.false : expect(user).to.not.be.undefined;
-            user ? user.profile ? expect(user.profile.deleted).to.be.true : expect(user.profile).to.not.be.undefined : {};
+            user && user.profile ? expect(user.profile.deleted).to.be.true : user && expect(user.profile).to.not.be.undefined;
         });
 
         // checks default setting
@@ -89,12 +89,10 @@ describe('entity manager tests', async () => {
 
         it('books are created with data version, get all book for data version 0', async () => {
             await initDb(connection);
-            connection.manager.queryRunner && connection.manager.queryRunner.data ?
-                connection.manager.queryRunner.data = {context: {dataVersion: 0}} : {};
-            let booksInit: Book[] = await connection.manager.find(Book, {});
-            connection.manager.queryRunner && connection.manager.queryRunner.data ?
-                connection.manager.queryRunner.data = {context: {dataVersion: 2}} : {};
-            let booksAfterDataVersion: Book[] = await connection.manager.find(Book, {});
+            connection.manager.queryRunner && (connection.manager.queryRunner.data = {context: {dataVersion: 0}});
+            let booksInit: Book[] = await connection.manager.find(Book);
+            connection.manager.queryRunner && (connection.manager.queryRunner.data = {context: {dataVersion: 2}});
+            let booksAfterDataVersion: Book[] = await connection.manager.find(Book);
             expect(booksInit.length).to.equal(2);
             expect(booksAfterDataVersion.length).to.equal(0);
         });
@@ -105,7 +103,7 @@ describe('entity manager tests', async () => {
             setContext(connection, {realityId: 1});
             await connection.manager.save(Book, bookFail);
             let dv = await connection.manager.findOne(DataVersion);
-            let bookSaved = await connection.manager.findOne(Book, {where:{title:bookFail.title}});
+            let bookSaved = await connection.manager.findOne(Book, {where: {title: bookFail.title}});
             dv ? expect(dv.value).to.equal(1) : expect(dv).to.not.be.undefined;
             expect(bookSaved).to.be.undefined;
         });
@@ -119,7 +117,7 @@ describe('entity manager tests', async () => {
             setContext(connection, {realityId: 1});
             await connection.manager.save(Book, bookReality1);
             setContext(connection, {realityId: 1});
-            let book: Book | undefined = await connection.manager.findOne(Book, {});
+            let book: Book | undefined = await connection.manager.findOne(Book);
             expect(book).to.deep.equal(bookReality1);
         });
 

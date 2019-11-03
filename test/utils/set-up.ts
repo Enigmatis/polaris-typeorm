@@ -28,6 +28,7 @@ export const rowling = 'J.K Rowling';
 export const mrCascade = 'Mr Cascade';
 export const harryPotter = 'Harry Potter and the Chamber of Secrets';
 export const cascadeBook = 'Cascade Book';
+
 export const initDb = async (connection: Connection) => {
     const hpBook = new Book(harryPotter);
     const cbBook = new Book(cascadeBook);
@@ -41,12 +42,12 @@ export const initDb = async (connection: Connection) => {
     await connection.manager.save(Library, new Library("public", [cbBook]));
 };
 
-export function setContext(connection: Connection, context: PolarisContext): void {
-    connection.manager.queryRunner && connection.manager.queryRunner.data ?
-        connection.manager.queryRunner.data.context = context : {};
+export function setContext(connection: Connection, context?: PolarisContext): void {
+    connection.manager.queryRunner &&
+    (connection.manager.queryRunner.data.context = context || {});
 }
 
 export function getContext(connection: Connection): PolarisContext {
-    return connection.manager.queryRunner && connection.manager.queryRunner.data ?
-        connection.manager.queryRunner.data.context : {};
+    return !connection.manager.queryRunner ||
+        connection.manager.queryRunner.data.context;
 }
