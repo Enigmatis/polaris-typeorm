@@ -1,8 +1,9 @@
 import {
     Connection, DeepPartial, DeleteResult, EntityManager, EntitySchema,
-    FindManyOptions, FindOneOptions, ObjectID, ObjectType, SaveOptions, UpdateResult
+    FindManyOptions, FindOneOptions, ObjectID, ObjectType, SaveOptions, UpdateResult, Not, In
 } from "typeorm";
-import {TypeORMConfig, runAndMeasureTime, PolarisContext} from "./common-polaris";
+import {TypeORMConfig} from "./common-polaris";
+import {PolarisBaseContext, runAndMeasureTime} from "@enigmatis/polaris-common"
 import {FindHandler} from "./handlers/find-handler";
 import {DataVersionHandler} from "./handlers/data-version-handler";
 import {PolarisGraphQLLogger} from "@enigmatis/polaris-graphql-logger"
@@ -19,9 +20,9 @@ export class PolarisEntityManager extends EntityManager {
     dataVersionHandler: DataVersionHandler;
     findHandler: FindHandler;
     softDeleteHandler: SoftDeleteHandler;
-    logger: PolarisGraphQLLogger<PolarisContext>;
+    logger: PolarisGraphQLLogger<PolarisBaseContext>;
 
-    constructor(connection: Connection, config: TypeORMConfig, logger: PolarisGraphQLLogger<PolarisContext>) {
+    constructor(connection: Connection, config: TypeORMConfig, logger: PolarisGraphQLLogger<PolarisBaseContext>) {
         super(connection, connection.createQueryRunner());
         if (this.queryRunner) {
             this.queryRunner.data = {context: {}};
@@ -87,7 +88,11 @@ export class PolarisEntityManager extends EntityManager {
     async find<Entity>(entityClass: ObjectType<Entity> | EntitySchema<Entity> | string, optionsOrConditions?: FindManyOptions<Entity> | any): Promise<Entity[]> {
         let run = await runAndMeasureTime(async () => {
             // @ts-ignore
-            return super.find(entityClass, this.calculateCriteria(entityClass, true, optionsOrConditions));
+            let results = await super.find(entityClass, this.calculateCriteria(entityClass, true, optionsOrConditions));
+            // @ts-ignore
+            let irrelevant = await super.find(entityClass, this.calculateCriteria(entityClass, true, {select:["id"], where: {id: Not(In(results.map(x=>x.id)))}}))
+            this.getContext().irrelevantEntities
+            return results;
         });
         this.logger.debug('finished find action successfully', {
             context: this.getContext(),

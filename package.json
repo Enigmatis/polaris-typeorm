@@ -5,6 +5,7 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
+    "link": "npm link @enigmatis/polaris-common",
     "test": "mocha -r ts-node/register test/**/*.test.ts --timeout 15000",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "semantic-release": "semantic-release",
@@ -57,6 +58,7 @@
   },
   "homepage": "https://github.com/Enigmatis/polaris-typeorm#readme",
   "dependencies": {
+    "@enigmatis/polaris-common": "^1.0.1",
     "@enigmatis/polaris-graphql-logger": "^1.0.2",
     "@types/node": "^12.7.4",
     "reflect-metadata": "^0.1.13",

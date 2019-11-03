@@ -5,7 +5,8 @@ import {Profile} from "../dal/profile";
 import {User} from "../dal/user";
 import {PolarisGraphQLLogger} from "@enigmatis/polaris-graphql-logger"
 import {applicationLogProperties, connectionOptions, loggerConfig} from "./test-properties";
-import {PolarisContext, TypeORMConfig} from "../../src/common-polaris";
+import {TypeORMConfig} from "../../src/common-polaris";
+import {PolarisBaseContext} from "@enigmatis/polaris-common"
 import {Library} from "../dal/library";
 import {createPolarisConnection} from "../../src";
 
@@ -41,12 +42,12 @@ export const initDb = async (connection: Connection) => {
     await connection.manager.save(Library, new Library("public", [cbBook]));
 };
 
-export function setContext(connection: Connection, context: PolarisContext): void {
+export function setContext(connection: Connection, context: PolarisBaseContext): void {
     connection.manager.queryRunner && connection.manager.queryRunner.data ?
         connection.manager.queryRunner.data.context = context : {};
 }
 
-export function getContext(connection: Connection): PolarisContext {
+export function getContext(connection: Connection): PolarisBaseContext {
     return connection.manager.queryRunner && connection.manager.queryRunner.data ?
         connection.manager.queryRunner.data.context : {};
 }
