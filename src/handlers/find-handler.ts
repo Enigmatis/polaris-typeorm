@@ -6,7 +6,7 @@ import {EntityManager, MoreThan} from "typeorm";
 const softDeleteCriteria = (config?: TypeORMConfig) =>
     config && config.softDelete && config.softDelete.returnEntities ? undefined : false;
 
-const dataVersionCriteria = (context: PolarisBaseContext) =>
+export const dataVersionCriteria = (context: PolarisBaseContext) =>
     context && context.dataVersion != undefined ? MoreThan(context.dataVersion) : undefined;
 
 const realityIdCriteria = (includeLinkedOper: boolean, context: PolarisBaseContext) => {

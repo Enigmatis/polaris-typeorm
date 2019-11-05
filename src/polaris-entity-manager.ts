@@ -4,7 +4,7 @@ import {
 } from "typeorm";
 import {TypeORMConfig} from "./common-polaris";
 import {PolarisBaseContext, runAndMeasureTime} from "@enigmatis/polaris-common"
-import {FindHandler} from "./handlers/find-handler";
+import {FindHandler, dataVersionCriteria} from "./handlers/find-handler";
 import {DataVersionHandler} from "./handlers/data-version-handler";
 import {PolarisGraphQLLogger} from "@enigmatis/polaris-graphql-logger"
 import {SoftDeleteHandler} from "./handlers/soft-delete-handler";
@@ -89,9 +89,12 @@ export class PolarisEntityManager extends EntityManager {
         let run = await runAndMeasureTime(async () => {
             // @ts-ignore
             let results = await super.find(entityClass, this.calculateCriteria(entityClass, true, optionsOrConditions));
+            let irrelevantWhereCriteria: any = results.length > 0 ? {id: Not(In(results.map((x:any)=>x.id)))} : {};
+            irrelevantWhereCriteria.dataVersion = dataVersionCriteria(this.getContext());
             // @ts-ignore
-            let irrelevant = await super.find(entityClass, this.calculateCriteria(entityClass, true, {select:["id"], where: {id: Not(In(results.map(x=>x.id)))}}))
-            this.getContext().irrelevantEntities
+            let irrelevant = await super.find(entityClass, {select:["id"], where: irrelevantWhereCriteria})
+            irrelevant = irrelevant.map((x:any) => x.id);
+            this.getContext().res.locals.tempIrrelevant = irrelevant;
             return results;
         });
         this.logger.debug('finished find action successfully', {
