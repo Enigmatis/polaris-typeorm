@@ -22,7 +22,10 @@ export class FindHandler {
     }
 
     public findConditions(includeLinkedOper: boolean, optionsOrConditions?: any) {
-        const context = this.manager.queryRunner ? this.manager.queryRunner.data.context : {};
+        let context: PolarisBaseContext = {};
+        if (this.manager.queryRunner && this.manager.queryRunner.data) {
+            context = this.manager.queryRunner.data.context || context;
+        }
         const polarisCriteria = optionsOrConditions || {};
         const riCriteria = realityIdCriteria(includeLinkedOper, context);
         const dvCriteria = dataVersionCriteria(context);

@@ -1,3 +1,4 @@
+import { PolarisBaseContext } from '@enigmatis/polaris-common';
 import { EntityManager } from 'typeorm';
 import { DataVersion } from '..';
 
@@ -9,7 +10,10 @@ export class DataVersionHandler {
     }
 
     public async updateDataVersion<Entity>() {
-        const context = this.manager.queryRunner ? this.manager.queryRunner.data.context : {};
+        let context: PolarisBaseContext = {};
+        if (this.manager.queryRunner && this.manager.queryRunner.data) {
+            context = this.manager.queryRunner.data.context || context;
+        }
         this.manager.connection.logger.log(
             'log',
             'Started data version job when inserting/updating entity',
