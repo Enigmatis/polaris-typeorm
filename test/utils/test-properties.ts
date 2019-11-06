@@ -5,7 +5,7 @@ import { CommonModel, DataVersion } from '../../src';
 
 export const connectionOptions: ConnectionOptions = {
     type: 'postgres',
-    url: process.env.CONNECTION_STRING || '',
+    url: process.env.CONNECTION_STRING || 'postgres://dbgazwwm:2ZIUE9vCEh-u-yHNENAhxbgrVJchkg8d@manny.db.elephantsql.com:5432/dbgazwwm',
     entities: [path.resolve(__dirname, '..') + '/dal/*.ts', CommonModel, DataVersion],
     synchronize: true,
     logging: false,

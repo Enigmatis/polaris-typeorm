@@ -5,10 +5,7 @@ const softDeleteCriteria = (connection: Connection) => {
     const config = connection.options.extra.config;
     return config && config.softDelete && config.softDelete.returnEntities ? undefined : false;
 };
-
 export const dataVersionCriteria = (context: PolarisBaseContext) =>
-    context && context.dataVersion != undefined ? MoreThan(context.dataVersion) : undefined;
-const dataVersionCriteria = (context: PolarisBaseContext) =>
     context.dataVersion !== undefined ? MoreThan(context.dataVersion) : undefined;
 
 const realityIdCriteria = (includeLinkedOper: boolean, context: PolarisBaseContext) =>

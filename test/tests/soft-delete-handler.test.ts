@@ -4,7 +4,7 @@ import { Author } from '../dal/author';
 import { Book } from '../dal/book';
 import { Library } from '../dal/library';
 import { User } from '../dal/user';
-import { initDb, setUpTestConnection } from '../utils/set-up';
+import {initDb, setContext, setUpTestConnection} from '../utils/set-up';
 import {
     authorWithCascadeCriteria,
     bookWithCascadeCriteria,
@@ -17,6 +17,7 @@ describe('soft delete handler tests', () => {
     beforeEach(async () => {
         connection = await setUpTestConnection();
         softDeleteHandler = new SoftDeleteHandler(connection.manager);
+        setContext(connection, { res: { locals: {}}})
     });
     afterEach(async () => {
         await connection.close();
