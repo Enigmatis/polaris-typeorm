@@ -1,4 +1,4 @@
-import { PolarisBaseContext } from '@enigmatis/polaris-common';
+import { PolarisExtensions, PolarisRequestHeaders } from '@enigmatis/polaris-common';
 import { PolarisLogger } from '@enigmatis/polaris-logs';
 import { Connection } from 'typeorm';
 import { createPolarisConnection } from '../../../src';
@@ -41,12 +41,30 @@ export const initDb = async (connection: Connection) => {
     await connection.manager.save(Library, new Library('public', [cbBook]));
 };
 
-export function setContext(connection: Connection, context?: PolarisBaseContext): void {
-    if (connection.manager.queryRunner) {
-        connection.manager.queryRunner.data.context = context || {};
+export function setHeaders(connection: Connection, headers?: PolarisRequestHeaders): void {
+    if (connection.manager.queryRunner && connection.manager.queryRunner.data) {
+        connection.manager.queryRunner.data.headers = headers || {};
     }
 }
 
-export function getContext(connection: Connection): PolarisBaseContext {
-    return !connection.manager.queryRunner || connection.manager.queryRunner.data.context;
+export function getHeaders(connection: Connection): PolarisRequestHeaders {
+    return (
+        connection.manager.queryRunner &&
+        connection.manager.queryRunner.data &&
+        connection.manager.queryRunner.data.headers
+    );
+}
+
+export function setExtensions(connection: Connection, extensions?: PolarisExtensions): void {
+    if (connection.manager.queryRunner && connection.manager.queryRunner.data) {
+        connection.manager.queryRunner.data.extensions = extensions || {};
+    }
+}
+
+export function getExtensions(connection: Connection): PolarisExtensions {
+    return (
+        connection.manager.queryRunner &&
+        connection.manager.queryRunner.data &&
+        connection.manager.queryRunner.data.extensions
+    );
 }

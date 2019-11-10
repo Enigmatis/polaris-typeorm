@@ -6,12 +6,14 @@ import { Profile } from '../dal/profile';
 import { User } from '../dal/user';
 import {
     cascadeBook,
+    getExtensions,
     harryPotter,
     initDb,
     mrCascade,
     profile,
     rowling,
-    setContext,
+    setExtensions,
+    setHeaders,
     setUpTestConnection,
     user,
 } from '../utils/set-up';
@@ -30,7 +32,7 @@ let connection: Connection;
 describe('entity manager tests', () => {
     beforeEach(async () => {
         connection = await setUpTestConnection();
-        setContext(connection, { res: { locals: {} } });
+        setHeaders(connection, { res: { locals: {} } } as any);
     });
     afterEach(async () => {
         await connection.close();
@@ -103,15 +105,17 @@ describe('entity manager tests', () => {
     describe('data version tests', () => {
         it('books are created with data version, get all book for data version 0', async () => {
             await initDb(connection);
-            if (connection.manager.queryRunner) {
+            if (connection.manager.queryRunner && connection.manager.queryRunner.data) {
                 connection.manager.queryRunner.data = {
-                    context: { res: { locals: {} }, dataVersion: 0 },
+                    extensions: {},
+                    headers: { dataVersion: 0 },
                 };
             }
             const booksInit: Book[] = await connection.manager.find(Book);
-            if (connection.manager.queryRunner) {
+            if (connection.manager.queryRunner && connection.manager.queryRunner.data) {
                 connection.manager.queryRunner.data = {
-                    context: { res: { locals: {} }, dataVersion: 2 },
+                    extensions: {},
+                    headers: { dataVersion: 2 },
                 };
             }
             const booksAfterDataVersion: Book[] = await connection.manager.find(Book);
@@ -122,7 +126,7 @@ describe('entity manager tests', () => {
         it('fail save action, data version not progressing', async () => {
             await initDb(connection);
             const bookFail = new Book('fail book');
-            setContext(connection, { realityId: 1 });
+            setHeaders(connection, { realityId: 1 });
             await connection.manager.save(Book, bookFail);
             const dv = await connection.manager.findOne(DataVersion);
             const bookSaved = await connection.manager.findOne(Book, {
@@ -134,20 +138,20 @@ describe('entity manager tests', () => {
     });
 
     describe('reality tests', () => {
-        it('reality id is supplied in context', async () => {
+        it('reality id is supplied in headers', async () => {
             await initDb(connection);
             const bookReality1: any = new Book('Jurassic Park');
             bookReality1.realityId = 1;
-            setContext(connection, { realityId: 1 });
+            setHeaders(connection, { realityId: 1 });
             await connection.manager.save(Book, bookReality1);
-            setContext(connection, { realityId: 1 });
+            setHeaders(connection, { realityId: 1 });
             const book: Book | undefined = await connection.manager.findOne(Book);
             expect(book).toEqual(bookReality1);
         });
 
         it('delete operational entity, linked oper header true and reality id isnt operational, entity not deleted', async () => {
             await initDb(connection);
-            setContext(connection, { realityId: 1 });
+            setHeaders(connection, { realityId: 1 });
             try {
                 await connection.manager.delete(Author, testAuthorCriteria);
             } catch (err) {
@@ -196,10 +200,10 @@ describe('entity manager tests', () => {
     describe('Irrelevant entities tests', () => {
         it('should search for irrelevant entities', async () => {
             await initDb(connection);
-            const context = { res: { locals: { tempIrrelevant: {} } }, dataVersion: 0 };
-            setContext(connection, context);
-            const book1 = await connection.manager.find(Book, { where: { title: Like('Harry%') } });
-            const irrelevantEntities = context.res.locals.tempIrrelevant;
+            setHeaders(connection, { dataVersion: 0 });
+            setExtensions(connection, { irrelevantEntities: {}, globalDataVersion: 0 });
+            // const book1 = await connection.manager.find(Book, { where: { title: Like('Harry%') } });
+            const irrelevantEntities = getExtensions(connection).irrelevantEntities;
             const irrelevantBooks: any = await connection.manager.find(Book, {
                 where: { title: Like('Cascade%') },
             });
@@ -208,14 +212,14 @@ describe('entity manager tests', () => {
 
         it('should search for irrelevant entities even if deleted', async () => {
             await initDb(connection);
-            const context = { res: { locals: { tempIrrelevant: {} } }, dataVersion: 0 };
-            setContext(connection, context);
+            setHeaders(connection, { dataVersion: 0 });
+            setExtensions(connection, { irrelevantEntities: {}, globalDataVersion: 0 });
             const irrelevantBooks: any = await connection.manager.find(Book, {
                 where: { title: Like('Cascade%') },
             });
             await connection.manager.delete(Book, { where: { title: Like('Cascade%') } });
             await connection.manager.find(Book, { where: { title: Like('Harry%') } });
-            const irrelevantEntities = context.res.locals.tempIrrelevant;
+            const irrelevantEntities = getExtensions(connection).irrelevantEntities;
             expect(irrelevantEntities).toEqual([irrelevantBooks[0].id]);
         });
     });

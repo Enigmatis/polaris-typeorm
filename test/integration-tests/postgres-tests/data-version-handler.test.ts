@@ -1,7 +1,7 @@
-import { Connection } from 'typeorm';
+/*import { Connection } from 'typeorm';
 import { DataVersion } from '../../../src';
 import { DataVersionHandler } from '../../../src/handlers/data-version-handler';
-import { getContext, setContext, setUpTestConnection } from '../utils/set-up';
+import { getHeaders, setHeaders, setUpTestConnection } from '../utils/set-up';
 
 let connection: Connection;
 let dataVersionHandler: DataVersionHandler;
@@ -26,17 +26,17 @@ describe('data version handler tests', () => {
 
     it('no global data version in context but exist in db, data version incremented and saved to db and context', async () => {
         await connection.manager.save(DataVersion, new DataVersion(1));
-        setContext(connection);
+        setHeaders(connection);
         await dataVersionHandler.updateDataVersion();
         const dv: DataVersion | undefined = await connection.manager.findOne(DataVersion);
-        expect(getContext(connection).globalDataVersion).toEqual(2);
+        expect(getHeaders(connection).globalDataVersion).toEqual(2);
         expect(dv).toBeDefined();
         if (dv) {
             expect(dv.getValue()).toEqual(2);
         }
     });
     it('global data version in context and not in db, throws error', async () => {
-        setContext(connection, { globalDataVersion: 1 });
+        setHeaders(connection, { globalDataVersion: 1 });
         try {
             await dataVersionHandler.updateDataVersion();
         } catch (err) {
@@ -47,7 +47,7 @@ describe('data version handler tests', () => {
     });
     it('global data version in context but does not equal to data version in db, throws error', async () => {
         await connection.manager.save(DataVersion, new DataVersion(1));
-        setContext(connection, { globalDataVersion: 3 });
+        setHeaders(connection, { globalDataVersion: 3 });
         try {
             await dataVersionHandler.updateDataVersion();
         } catch (err) {
@@ -58,13 +58,13 @@ describe('data version handler tests', () => {
     });
     it('global data version in context and equal to data version in db, data version does not increment', async () => {
         await connection.manager.save(DataVersion, new DataVersion(1));
-        setContext(connection, { globalDataVersion: 1 });
+        setHeaders(connection, { globalDataVersion: 1 });
         await dataVersionHandler.updateDataVersion();
         const dv = await connection.manager.findOne(DataVersion);
-        expect(getContext(connection).globalDataVersion).toEqual(1);
+        expect(getHeaders(connection).globalDataVersion).toEqual(1);
         expect(dv).toBeDefined();
         if (dv) {
             expect(dv.getValue()).toEqual(1);
         }
     });
-});
+});*/

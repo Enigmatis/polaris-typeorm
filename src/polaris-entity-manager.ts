@@ -24,7 +24,7 @@ export class PolarisEntityManager extends EntityManager {
     constructor(connection: Connection) {
         super(connection, connection.createQueryRunner());
         if (this.queryRunner && this.queryRunner.data) {
-            this.queryRunner.data = { context: {} };
+            this.queryRunner.data = { headers: {}, extensions: {} };
         }
         this.dataVersionHandler = new DataVersionHandler(this);
         this.findHandler = new FindHandler(this);
@@ -73,7 +73,7 @@ export class PolarisEntityManager extends EntityManager {
             }
         });
         if (this.queryRunner) {
-            this.queryRunner.data.elapsedTime = run.time;
+            this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished delete action successfully', this.queryRunner);
         return run.returnValue;
@@ -102,7 +102,7 @@ export class PolarisEntityManager extends EntityManager {
             );
         });
         if (this.queryRunner) {
-            this.queryRunner.data.elapsedTime = run.time;
+            this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log(
             'log',
@@ -123,18 +123,17 @@ export class PolarisEntityManager extends EntityManager {
             );
             const irrelevantWhereCriteria: any =
                 results.length > 0 ? { id: Not(In(results.map((x: any) => x.id))) } : {};
-            irrelevantWhereCriteria.dataVersion = dataVersionCriteria(this.getContext());
+            irrelevantWhereCriteria.dataVersion = dataVersionCriteria(this.getHeaders());
             let irrelevant: any = await super.find(entityClass, {
                 select: ['id'],
                 where: irrelevantWhereCriteria,
             });
             irrelevant = irrelevant.map((x: any) => x.id);
-            this.getContext().res.locals.tempIrrelevant = irrelevant;
-
+            this.getExtensions().irrelevantEntities = irrelevant;
             return results;
         });
         if (this.queryRunner) {
-            this.queryRunner.data.elapsedTime = run.time;
+            this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished find action successfully', this.queryRunner);
         return run.returnValue;
@@ -151,7 +150,7 @@ export class PolarisEntityManager extends EntityManager {
             );
         });
         if (this.queryRunner) {
-            this.queryRunner.data.elapsedTime = run.time;
+            this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished count action successfully', this.queryRunner);
         return run.returnValue;
@@ -174,7 +173,7 @@ export class PolarisEntityManager extends EntityManager {
             }
         });
         if (this.queryRunner) {
-            this.queryRunner.data.elapsedTime = run.time;
+            this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished save action successfully', this.queryRunner);
         return run.returnValue;
@@ -197,13 +196,13 @@ export class PolarisEntityManager extends EntityManager {
         const run = await runAndMeasureTime(async () => {
             await this.wrapTransaction(async () => {
                 await this.dataVersionHandler.updateDataVersion();
-                const globalDataVersion = this.getContext().globalDataVersion;
+                const globalDataVersion = this.getExtensions().globalDataVersion;
                 partialEntity = { ...partialEntity, ...{ dataVersion: globalDataVersion } };
                 return super.update(target, criteria, partialEntity);
             });
         });
         if (this.queryRunner) {
-            this.queryRunner.data.elapsedTime = run.time;
+            this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished update action successfully', this.queryRunner);
         return run.returnValue;
@@ -234,17 +233,17 @@ export class PolarisEntityManager extends EntityManager {
     private async saveDataVersionAndRealityId(maybeEntityOrOptions?: any) {
         if (maybeEntityOrOptions instanceof Array) {
             for (const t of maybeEntityOrOptions) {
-                t.dataVersion = this.getContext().globalDataVersion;
+                t.dataVersion = this.getExtensions().globalDataVersion;
                 this.setRealityIdOfEntity(t);
             }
         } else {
-            maybeEntityOrOptions.dataVersion = this.getContext().globalDataVersion;
+            maybeEntityOrOptions.dataVersion = this.getExtensions().globalDataVersion;
             this.setRealityIdOfEntity(maybeEntityOrOptions);
         }
     }
 
     private setRealityIdOfEntity(entity: any) {
-        const realityIdFromHeader = this.getContext().realityId || 0;
+        const realityIdFromHeader = this.getHeaders().realityId || 0;
         if (entity.realityId === undefined) {
             entity.realityId = realityIdFromHeader;
         } else if (entity.realityId !== realityIdFromHeader) {
@@ -252,9 +251,8 @@ export class PolarisEntityManager extends EntityManager {
         }
     }
 
-    private getContext = () => {
-        return this.queryRunner ? this.queryRunner.data.context : {};
-    };
+    private getHeaders = () => this.queryRunner && (this.queryRunner.data.headers || {});
+    private getExtensions = () => this.queryRunner && (this.queryRunner.data.extensions || {});
 
     private calculateCriteria(target: any, includeLinkedOper: boolean, criteria: any) {
         return target.toString().includes('CommonModel')

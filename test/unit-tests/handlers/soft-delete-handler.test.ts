@@ -8,7 +8,7 @@ describe('soft delete handler tests', () => {
     it('parent is not common model, soft delete parent entity, does not delete linked entity', async () => {
         const connection = {
             manager: {
-                queryRunner: { data: { context: {} } },
+                queryRunner: { data: { headers: {} } },
                 save: jest.fn(),
                 connection: {
                     options: { extra: { config: { softDelete: { returnEntities: true } } } },
@@ -26,7 +26,7 @@ describe('soft delete handler tests', () => {
     it('field is not common model, does not delete linked entity', async () => {
         const connection = {
             manager: {
-                queryRunner: { data: { context: {} } },
+                queryRunner: { data: { headers: {} } },
                 save: jest.fn(),
                 connection: {
                     options: { extra: { config: { softDelete: { returnEntities: true } } } },
@@ -63,7 +63,7 @@ describe('soft delete handler tests', () => {
     it('parent and field are common models but cascade is not on, does not delete linked entity', async () => {
         const connection = {
             manager: {
-                queryRunner: { data: { context: {} } },
+                queryRunner: { data: { headers: {} } },
                 save: jest.fn(),
                 connection: {
                     options: { extra: { config: { softDelete: { returnEntities: true } } } },
@@ -101,7 +101,7 @@ describe('soft delete handler tests', () => {
     it('field is common model and cascade is on, delete linked entity', async () => {
         const connection = {
             manager: {
-                queryRunner: { data: { context: {} } },
+                queryRunner: { data: { headers: {} } },
                 save: jest.fn(),
                 connection: {
                     options: { extra: { config: { softDelete: { returnEntities: true } } } },
