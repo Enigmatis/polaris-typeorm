@@ -1,8 +1,8 @@
 import { CommonModel } from '../../../src';
 import { SoftDeleteHandler } from '../../../src/handlers/soft-delete-handler';
-import { Author } from '../../integration-tests/dal/author';
-import { Book } from '../../integration-tests/dal/book';
-import { Library } from '../../integration-tests/dal/library';
+import { Author } from '../../dal/author';
+import { Book } from '../../dal/book';
+import { Library } from '../../dal/library';
 
 describe('soft delete handler tests', () => {
     it('parent is not common model, soft delete parent entity, does not delete linked entity', async () => {

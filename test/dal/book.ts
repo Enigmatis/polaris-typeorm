@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne } from 'typeorm';
-import { CommonModel } from '../../../src';
+import { CommonModel } from '../../src';
 import { Author } from './author';
 import { Library } from './library';
 

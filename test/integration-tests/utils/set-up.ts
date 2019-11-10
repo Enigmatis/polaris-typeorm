@@ -2,11 +2,11 @@ import { PolarisExtensions, PolarisRequestHeaders } from '@enigmatis/polaris-com
 import { PolarisLogger } from '@enigmatis/polaris-logs';
 import { Connection } from 'typeorm';
 import { createPolarisConnection } from '../../../src';
-import { Author } from '../dal/author';
-import { Book } from '../dal/book';
-import { Library } from '../dal/library';
-import { Profile } from '../dal/profile';
-import { User } from '../dal/user';
+import { Author } from '../../dal/author';
+import { Book } from '../../dal/book';
+import { Library } from '../../dal/library';
+import { Profile } from '../../dal/profile';
+import { User } from '../../dal/user';
 import { applicationLogProperties, connectionOptions, loggerConfig } from './test-properties';
 
 export const setUpTestConnection = async (): Promise<Connection> => {

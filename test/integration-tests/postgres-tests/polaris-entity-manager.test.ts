@@ -1,10 +1,10 @@
 import { Connection, Like } from 'typeorm';
 import { DataVersion } from '../../../src';
-import { Author } from '../dal/author';
-import { Book } from '../dal/book';
-import { Library } from '../dal/library';
-import { Profile } from '../dal/profile';
-import { User } from '../dal/user';
+import { Author } from '../../dal/author';
+import { Book } from '../../dal/book';
+import { Library } from '../../dal/library';
+import { Profile } from '../../dal/profile';
+import { User } from '../../dal/user';
 import {
     cascadeBook,
     getExtensions,

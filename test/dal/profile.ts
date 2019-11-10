@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { CommonModel } from '../../../src';
+import { CommonModel } from '../../src';
 
 @Entity()
 export class Profile extends CommonModel {
