@@ -11,7 +11,7 @@ export class DataVersionHandler {
 
     public async updateDataVersion<Entity>() {
         let context: PolarisBaseContext = {};
-        if (this.manager.queryRunner && this.manager.queryRunner.data) {
+        if (this.manager && this.manager.queryRunner && this.manager.queryRunner.data) {
             context = this.manager.queryRunner.data.context || context;
         }
         this.manager.connection.logger.log(
@@ -50,6 +50,9 @@ export class DataVersionHandler {
                     throw new Error('data version in context does not equal data version in table');
                 }
             }
+        }
+        if (this.manager && this.manager.queryRunner && this.manager.queryRunner.data) {
+            this.manager.queryRunner.data.context = context;
         }
         this.manager.connection.logger.log(
             'log',

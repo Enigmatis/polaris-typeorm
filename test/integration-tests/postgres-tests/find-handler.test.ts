@@ -1,5 +1,5 @@
 import { Connection } from 'typeorm';
-import { FindHandler } from '../../src/handlers/find-handler';
+import { FindHandler } from '../../../src/handlers/find-handler';
 import { setContext, setUpTestConnection } from '../utils/set-up';
 
 let connection: Connection;

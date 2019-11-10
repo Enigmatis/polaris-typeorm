@@ -1,6 +1,6 @@
 import { Connection } from 'typeorm';
-import { DataVersion } from '../../src';
-import { DataVersionHandler } from '../../src/handlers/data-version-handler';
+import { DataVersion } from '../../../src';
+import { DataVersionHandler } from '../../../src/handlers/data-version-handler';
 import { getContext, setContext, setUpTestConnection } from '../utils/set-up';
 
 let connection: Connection;

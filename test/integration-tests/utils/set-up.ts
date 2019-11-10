@@ -1,7 +1,7 @@
 import { PolarisBaseContext } from '@enigmatis/polaris-common';
 import { PolarisLogger } from '@enigmatis/polaris-logs';
 import { Connection } from 'typeorm';
-import { createPolarisConnection } from '../../src';
+import { createPolarisConnection } from '../../../src';
 import { Author } from '../dal/author';
 import { Book } from '../dal/book';
 import { Library } from '../dal/library';

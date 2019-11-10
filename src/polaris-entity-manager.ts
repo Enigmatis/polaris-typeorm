@@ -15,13 +15,13 @@ import { FindHandler } from './handlers/find-handler';
 import { SoftDeleteHandler } from './handlers/soft-delete-handler';
 
 export class PolarisEntityManager extends EntityManager {
-    private dataVersionHandler: DataVersionHandler;
-    private findHandler: FindHandler;
-    private softDeleteHandler: SoftDeleteHandler;
+    public dataVersionHandler: DataVersionHandler;
+    public findHandler: FindHandler;
+    public softDeleteHandler: SoftDeleteHandler;
 
     constructor(connection: Connection) {
         super(connection, connection.createQueryRunner());
-        if (this.queryRunner) {
+        if (this.queryRunner && this.queryRunner.data) {
             this.queryRunner.data = { context: {} };
         }
         this.dataVersionHandler = new DataVersionHandler(this);
@@ -51,7 +51,7 @@ export class PolarisEntityManager extends EntityManager {
             const metadata = this.connection.entityMetadatas.find(
                 meta => meta.target === targetOrEntity,
             );
-            if (metadata) {
+            if (metadata && metadata.relations.length > 0) {
                 calculatedCriteria.relations = metadata.relations.map(
                     relation => relation.propertyName,
                 );

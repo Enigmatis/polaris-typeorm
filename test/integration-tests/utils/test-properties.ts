@@ -1,11 +1,12 @@
 import { ApplicationLogProperties, LoggerConfiguration } from '@enigmatis/polaris-logs';
 import * as path from 'path';
 import { ConnectionOptions } from 'typeorm';
-import { CommonModel, DataVersion } from '../../src';
+import { CommonModel, DataVersion } from '../../../src';
 
 export const connectionOptions: ConnectionOptions = {
     type: 'postgres',
-    url: process.env.CONNECTION_STRING || '',
+    url:
+        'postgres://qffjtmum:rDEsnU-by7QKb7I1ZcgY23C8dgUIGy1R@balarama.db.elephantsql.com:5432/qffjtmum', // process.env.CONNECTION_STRING || '',
     entities: [path.resolve(__dirname, '..') + '/dal/*.ts', CommonModel, DataVersion],
     synchronize: true,
     logging: false,

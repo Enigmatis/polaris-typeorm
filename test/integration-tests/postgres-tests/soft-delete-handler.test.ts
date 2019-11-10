@@ -1,5 +1,5 @@
 import { Connection } from 'typeorm';
-import { SoftDeleteHandler } from '../../src/handlers/soft-delete-handler';
+import { SoftDeleteHandler } from '../../../src/handlers/soft-delete-handler';
 import { Author } from '../dal/author';
 import { Book } from '../dal/book';
 import { Library } from '../dal/library';
@@ -23,7 +23,9 @@ describe('soft delete handler tests', () => {
     });
 
     it('parent is not common model, soft delete parent entity, does not delete linked entity', async () => {
-        Object.assign(connection.manager, 'config', { softDelete: { returnEntities: true } });
+        Object.assign(connection.options, {
+            extra: { config: { softDelete: { returnEntities: true } } },
+        });
         await initDb(connection);
         const lib = await connection.manager.findOne(Library, { relations: ['books'] });
         await softDeleteHandler.softDeleteRecursive(Library, lib);
@@ -38,7 +40,9 @@ describe('soft delete handler tests', () => {
     });
 
     it('field is not common model, does not delete linked entity', async () => {
-        Object.assign(connection.manager, 'config', { softDelete: { returnEntities: true } });
+        Object.assign(connection.options, {
+            extra: { config: { softDelete: { returnEntities: true } } },
+        });
         await initDb(connection);
         const lib = await connection.manager.findOne(Library, { relations: ['books'] });
         const authorWithCascade = await connection.manager.findOne(
@@ -53,7 +57,9 @@ describe('soft delete handler tests', () => {
     });
 
     it('parent and field are common models but cascade is not on, does not delete linked entity', async () => {
-        Object.assign(connection.manager, 'config', { softDelete: { returnEntities: true } });
+        Object.assign(connection.options, {
+            extra: { config: { softDelete: { returnEntities: true } } },
+        });
         await initDb(connection);
         const user: User | undefined = await connection.manager.findOne(User, {
             ...userCriteria,
