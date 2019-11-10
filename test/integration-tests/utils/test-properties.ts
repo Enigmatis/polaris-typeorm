@@ -9,7 +9,7 @@ export const connectionOptions: ConnectionOptions = {
         'postgres://qffjtmum:rDEsnU-by7QKb7I1ZcgY23C8dgUIGy1R@balarama.db.elephantsql.com:5432/qffjtmum', // process.env.CONNECTION_STRING || '',
     entities: [path.resolve(__dirname, '..') + '/dal/*.ts', CommonModel, DataVersion],
     synchronize: true,
-    logging: false,
+    logging: true,
 };
 
 export const applicationLogProperties: ApplicationLogProperties = {

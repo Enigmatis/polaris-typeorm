@@ -2,6 +2,7 @@ import { Connection, Like } from 'typeorm';
 import { DataVersion } from '../../../src';
 import { Author } from '../dal/author';
 import { Book } from '../dal/book';
+import { Library } from '../dal/library';
 import { Profile } from '../dal/profile';
 import { User } from '../dal/user';
 import {
@@ -38,69 +39,146 @@ describe('entity manager tests', () => {
         await connection.close();
     });
     describe('soft delete tests', () => {
-        it('delete linked entity, should not return deleted entities(first level), get entity and its linked entity', async () => {
-            await initDb(connection);
-            await connection.manager.delete(Profile, profileCriteria);
-            const userEntity: User | undefined = await connection.manager.findOne(User, {
-                ...userCriteria,
-                relations: ['profile'],
-            });
-
-            userEntity
-                ? expect(userEntity.getDeleted()).toBeFalsy()
-                : expect(userEntity).toBeDefined();
-            if (userEntity) {
-                userEntity.profile
-                    ? expect(userEntity.profile.getDeleted()).toBeTruthy()
-                    : expect(userEntity.profile).toBeDefined();
+        it('delete without criteria, should throw error', async () => {
+            try {
+                await connection.manager.delete('profile', {});
+            } catch (e) {
+                expect(e.message).toEqual('there are no entities to delete');
             }
         });
-
-        // checks default setting
-        it('delete entity, should not return deleted entities, doesnt return deleted entity', async () => {
+        it('parent is not common model, hard delete parent entity', async () => {
+            Object.assign(connection.options, {
+                extra: { config: { softDelete: { returnEntities: true } } },
+            });
             await initDb(connection);
-            await connection.manager.delete(Book, testBookCriteria);
-            const book: Book | undefined = await connection.manager.findOne(Book, testBookCriteria);
-            expect(book).toBeUndefined();
+            const criteria = { relations: ['books'] };
+            const lib = await connection.manager.findOne(Library, criteria);
+            expect(lib).toBeDefined();
+            await connection.manager.delete(Library, criteria);
+            const libAfterDelete = await connection.manager.findOne(Library, criteria);
+            expect(libAfterDelete).toBeUndefined();
         });
 
-        // checks soft delete allow false
-        it('delete entity, soft delete allow is false and return deleted entities true, doesnt return deleted entity', async () => {
+        it('field is not common model, does not delete linked entity', async () => {
+            Object.assign(connection.options, {
+                extra: { config: { softDelete: { returnEntities: true } } },
+            });
+            await initDb(connection);
+            await connection.manager.delete(Author, authorWithCascadeCriteria);
+            const lib = await connection.manager.findOne(Library, { relations: ['books'] });
+            const authorWithCascade = await connection.manager.findOne(
+                Author,
+                authorWithCascadeCriteria,
+            );
+            lib ? expect(lib.deleted).toBeFalsy() : expect(lib).toBeDefined();
+            authorWithCascade
+                ? expect(authorWithCascade.getDeleted()).toBeTruthy()
+                : expect(authorWithCascade).toBeDefined();
+        });
+
+        it('parent and field are common models but cascade is not on, does not delete linked entity', async () => {
+            Object.assign(connection.options, {
+                extra: { config: { softDelete: { returnEntities: true } } },
+            });
+            await initDb(connection);
+            const criteria = { ...userCriteria, relations: ['profile'] };
+            await connection.manager.delete(User, criteria);
+            const userCommonModel = await connection.manager.findOne(User, criteria);
+            userCommonModel
+                ? expect(userCommonModel.getDeleted()).toBeTruthy()
+                : expect(userCommonModel).toBeDefined();
+            userCommonModel
+                ? userCommonModel.profile
+                    ? expect(userCommonModel.profile.getDeleted()).toBeFalsy()
+                    : expect(userCommonModel.profile).toBeDefined()
+                : expect(userCommonModel).toBeDefined();
+        });
+
+        it('field is common model and cascade is on, delete linked entity', async () => {
+            Object.assign(connection.options, {
+                extra: { config: { softDelete: { returnEntities: true } } },
+            });
+            await initDb(connection);
+            await connection.manager.delete(Author, {
+                ...authorWithCascadeCriteria,
+                relations: ['books'],
+            });
+            const authorWithCascade: Author | undefined = await connection.manager.findOne(Author, {
+                ...authorWithCascadeCriteria,
+                relations: ['books'],
+            });
+            const bookWithCascade: Book | undefined = await connection.manager.findOne(
+                Book,
+                bookWithCascadeCriteria,
+            );
+            bookWithCascade
+                ? expect(bookWithCascade.getDeleted()).toBeTruthy()
+                : expect(bookWithCascade).toBeDefined();
+            authorWithCascade
+                ? expect(authorWithCascade.getDeleted()).toBeTruthy()
+                : expect(bookWithCascade).toBeDefined();
+        });
+    });
+    it('delete linked entity, should not return deleted entities(first level), get entity and its linked entity', async () => {
+        await initDb(connection);
+        await connection.manager.delete(Profile, profileCriteria);
+        const userEntity: User | undefined = await connection.manager.findOne(User, {
+            ...userCriteria,
+            relations: ['profile'],
+        });
+
+        userEntity ? expect(userEntity.getDeleted()).toBeFalsy() : expect(userEntity).toBeDefined();
+        if (userEntity) {
+            userEntity.profile
+                ? expect(userEntity.profile.getDeleted()).toBeTruthy()
+                : expect(userEntity.profile).toBeDefined();
+        }
+    });
+
+    // checks default setting
+    it('delete entity, should not return deleted entities, doesnt return deleted entity', async () => {
+        await initDb(connection);
+        await connection.manager.delete(Book, testBookCriteria);
+        const book: Book | undefined = await connection.manager.findOne(Book, testBookCriteria);
+        expect(book).toBeUndefined();
+    });
+
+    // checks soft delete allow false
+    it('delete entity, soft delete allow is false and return deleted entities true, doesnt return deleted entity', async () => {
+        Object.assign(connection.options, {
+            extra: { config: { softDelete: { returnEntities: true, allow: false } } },
+        });
+        await initDb(connection);
+        await connection.manager.delete(Author, testAuthorCriteria);
+        const author: Author | undefined = await connection.manager.findOne(
+            Author,
+            testAuthorCriteria,
+        );
+        expect(author).toBeUndefined();
+    });
+
+    // checks soft delete allow false with cascade
+    it(
+        'delete entity, soft delete allow is false and return deleted entities true and cascade is true,' +
+            ' doesnt return deleted entity and its linked entity',
+        async () => {
             Object.assign(connection.options, {
                 extra: { config: { softDelete: { returnEntities: true, allow: false } } },
             });
             await initDb(connection);
-            await connection.manager.delete(Author, testAuthorCriteria);
-            const author: Author | undefined = await connection.manager.findOne(
-                Author,
-                testAuthorCriteria,
+            await connection.manager.delete(Author, authorWithCascadeCriteria);
+            const bookWithCascade: Book | undefined = await connection.manager.findOne(
+                Book,
+                bookWithCascadeCriteria,
             );
-            expect(author).toBeUndefined();
-        });
-
-        // checks soft delete allow false with cascade
-        it(
-            'delete entity, soft delete allow is false and return deleted entities true and cascade is true,' +
-                ' doesnt return deleted entity and its linked entity',
-            async () => {
-                Object.assign(connection.options, {
-                    extra: { config: { softDelete: { returnEntities: true, allow: false } } },
-                });
-                await initDb(connection);
-                await connection.manager.delete(Author, authorWithCascadeCriteria);
-                const bookWithCascade: Book | undefined = await connection.manager.findOne(
-                    Book,
-                    bookWithCascadeCriteria,
-                );
-                const authorWithCascade: Author | undefined = await connection.manager.findOne(
-                    Author,
-                    authorWithCascadeCriteria,
-                );
-                expect(bookWithCascade).toBeUndefined();
-                expect(authorWithCascade).toBeUndefined();
-            },
-        );
-    });
+            const authorWithCascade: Author | undefined = await connection.manager.findOne(
+                Author,
+                authorWithCascadeCriteria,
+            );
+            expect(bookWithCascade).toBeUndefined();
+            expect(authorWithCascade).toBeUndefined();
+        },
+    );
 
     describe('data version tests', () => {
         it('books are created with data version, get all book for data version 0', async () => {
@@ -202,7 +280,7 @@ describe('entity manager tests', () => {
             await initDb(connection);
             setHeaders(connection, { dataVersion: 0 });
             setExtensions(connection, { irrelevantEntities: {}, globalDataVersion: 0 });
-            // const book1 = await connection.manager.find(Book, { where: { title: Like('Harry%') } });
+            await connection.manager.find(Book, { where: { title: Like('Harry%') } });
             const irrelevantEntities = getExtensions(connection).irrelevantEntities;
             const irrelevantBooks: any = await connection.manager.find(Book, {
                 where: { title: Like('Cascade%') },

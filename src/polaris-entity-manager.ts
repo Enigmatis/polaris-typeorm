@@ -61,7 +61,10 @@ export class PolarisEntityManager extends EntityManager {
             const entities: Entity[] = await super.find(targetOrEntity, calculatedCriteria);
             if (entities.length > 0) {
                 const config = this.connection.options.extra.config;
-                if (config && config.softDelete && config.softDelete.allow === false) {
+                if (
+                    (config && config.softDelete && config.softDelete.allow === false) ||
+                    !targetOrEntity.toString().includes('CommonModel')
+                ) {
                     return this.wrapTransaction(async () => {
                         await this.dataVersionHandler.updateDataVersion();
                         return super.delete(targetOrEntity, calculatedCriteria);
@@ -72,7 +75,7 @@ export class PolarisEntityManager extends EntityManager {
                 throw new Error('there are no entities to delete');
             }
         });
-        if (this.queryRunner) {
+        if (this.queryRunner && this.queryRunner.data) {
             this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished delete action successfully', this.queryRunner);
