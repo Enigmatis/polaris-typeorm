@@ -62,7 +62,6 @@
   "dependencies": {
     "@enigmatis/polaris-common": "^1.0.6",
     "@enigmatis/polaris-logs": "^2.5.4",
-    "@types/node": "^12.7.4",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.2.20"
   },
