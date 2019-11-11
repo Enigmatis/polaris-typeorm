@@ -14,8 +14,8 @@ export class DataVersionHandler {
             this.manager &&
             this.manager.queryRunner &&
             this.manager.queryRunner.data &&
-            this.manager.queryRunner.data.extensions &&
-            (this.manager.queryRunner.data.extensions || {});
+            this.manager.queryRunner.data.returnedExtensions &&
+            (this.manager.queryRunner.data.returnedExtensions || {});
         this.manager.connection.logger.log(
             'log',
             'Started data version job when inserting/updating entity',
@@ -54,7 +54,7 @@ export class DataVersionHandler {
             }
         }
         if (this.manager && this.manager.queryRunner && this.manager.queryRunner.data) {
-            this.manager.queryRunner.data.extensions = extensions;
+            this.manager.queryRunner.data.returnedExtensions = extensions;
         }
         this.manager.connection.logger.log(
             'log',

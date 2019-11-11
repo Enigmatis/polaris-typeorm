@@ -6,14 +6,12 @@ import {
     EntityManager,
     FindManyOptions,
     FindOneOptions,
-    In,
-    Not,
     ObjectID,
     SaveOptions,
     UpdateResult,
 } from 'typeorm';
 import { DataVersionHandler } from './handlers/data-version-handler';
-import { dataVersionCriteria, FindHandler } from './handlers/find-handler';
+import { FindHandler } from './handlers/find-handler';
 import { SoftDeleteHandler } from './handlers/soft-delete-handler';
 
 export class PolarisEntityManager extends EntityManager {
@@ -24,7 +22,7 @@ export class PolarisEntityManager extends EntityManager {
     constructor(connection: Connection) {
         super(connection, connection.createQueryRunner());
         if (this.queryRunner && this.queryRunner.data) {
-            this.queryRunner.data = { headers: {}, extensions: {} };
+            this.queryRunner.data = { requestHeaders: {}, returnedExtensions: {} };
         }
         this.dataVersionHandler = new DataVersionHandler(this);
         this.findHandler = new FindHandler(this);
@@ -120,20 +118,10 @@ export class PolarisEntityManager extends EntityManager {
         optionsOrConditions?: FindManyOptions<Entity> | any,
     ): Promise<Entity[]> {
         const run = await runAndMeasureTime(async () => {
-            const results: any = await super.find(
+            return super.find(
                 entityClass,
                 this.calculateCriteria(entityClass, true, optionsOrConditions),
             );
-            const irrelevantWhereCriteria: any =
-                results.length > 0 ? { id: Not(In(results.map((x: any) => x.id))) } : {};
-            irrelevantWhereCriteria.dataVersion = dataVersionCriteria(this.getHeaders());
-            let irrelevant: any = await super.find(entityClass, {
-                select: ['id'],
-                where: irrelevantWhereCriteria,
-            });
-            irrelevant = irrelevant.map((x: any) => x.id);
-            this.getExtensions().irrelevantEntities = irrelevant;
-            return results;
         });
         if (this.queryRunner) {
             this.queryRunner.data.elapsedTime = run.elapsedTime;
@@ -254,8 +242,12 @@ export class PolarisEntityManager extends EntityManager {
         }
     }
 
-    private getHeaders = () => this.queryRunner && (this.queryRunner.data.headers || {});
-    private getExtensions = () => this.queryRunner && (this.queryRunner.data.extensions || {});
+    private getHeaders = () =>
+        this.queryRunner && this.queryRunner.data && (this.queryRunner.data.requestHeaders || {});
+    private getExtensions = () =>
+        this.queryRunner &&
+        this.queryRunner.data &&
+        (this.queryRunner.data.returnedExtensions || {});
 
     private calculateCriteria(target: any, includeLinkedOper: boolean, criteria: any) {
         return target.toString().includes('CommonModel')

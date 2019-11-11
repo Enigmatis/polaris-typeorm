@@ -185,15 +185,15 @@ describe('entity manager tests', () => {
             await initDb(connection);
             if (connection.manager.queryRunner && connection.manager.queryRunner.data) {
                 connection.manager.queryRunner.data = {
-                    extensions: {},
-                    headers: { dataVersion: 0 },
+                    returnedExtensions: {},
+                    requestHeaders: { dataVersion: 0 },
                 };
             }
             const booksInit: Book[] = await connection.manager.find(Book);
             if (connection.manager.queryRunner && connection.manager.queryRunner.data) {
                 connection.manager.queryRunner.data = {
-                    extensions: {},
-                    headers: { dataVersion: 2 },
+                    returnedExtensions: {},
+                    requestHeaders: { dataVersion: 2 },
                 };
             }
             const booksAfterDataVersion: Book[] = await connection.manager.find(Book);

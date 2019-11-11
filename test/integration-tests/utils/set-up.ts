@@ -43,7 +43,7 @@ export const initDb = async (connection: Connection) => {
 
 export function setHeaders(connection: Connection, headers?: PolarisRequestHeaders): void {
     if (connection.manager.queryRunner && connection.manager.queryRunner.data) {
-        connection.manager.queryRunner.data.headers = headers || {};
+        connection.manager.queryRunner.data.requestHeaders = headers || {};
     }
 }
 
@@ -51,13 +51,13 @@ export function getHeaders(connection: Connection): PolarisRequestHeaders {
     return (
         connection.manager.queryRunner &&
         connection.manager.queryRunner.data &&
-        connection.manager.queryRunner.data.headers
+        connection.manager.queryRunner.data.requestHeaders
     );
 }
 
 export function setExtensions(connection: Connection, extensions?: PolarisExtensions): void {
     if (connection.manager.queryRunner && connection.manager.queryRunner.data) {
-        connection.manager.queryRunner.data.extensions = extensions || {};
+        connection.manager.queryRunner.data.returnedExtensions = extensions || {};
     }
 }
 
@@ -65,6 +65,6 @@ export function getExtensions(connection: Connection): PolarisExtensions {
     return (
         connection.manager.queryRunner &&
         connection.manager.queryRunner.data &&
-        connection.manager.queryRunner.data.extensions
+        connection.manager.queryRunner.data.returnedExtensions
     );
 }

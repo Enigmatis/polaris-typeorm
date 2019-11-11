@@ -5,7 +5,7 @@ const softDeleteCriteria = (connection: Connection) => {
     const config = connection.options.extra.config;
     return config && config.softDelete && config.softDelete.returnEntities ? undefined : false;
 };
-export const dataVersionCriteria = (headers: PolarisRequestHeaders) =>
+const dataVersionCriteria = (headers: PolarisRequestHeaders) =>
     headers.dataVersion !== undefined ? MoreThan(headers.dataVersion) : undefined;
 
 const realityIdCriteria = (includeLinkedOper: boolean, headers: PolarisRequestHeaders) =>
@@ -24,7 +24,7 @@ export class FindHandler {
         const headers: PolarisRequestHeaders =
             this.manager.queryRunner &&
             this.manager.queryRunner.data &&
-            (this.manager.queryRunner.data.headers || {});
+            (this.manager.queryRunner.data.requestHeaders || {});
         const polarisCriteria = optionsOrConditions || {};
         const riCriteria = realityIdCriteria(includeLinkedOper, headers);
         const dvCriteria = dataVersionCriteria(headers);

@@ -4,7 +4,7 @@ describe('find handler tests', () => {
     it('dataVersion property supplied in options or conditions and not in headers, get without data version condition', async () => {
         const connection = {
             manager: {
-                queryRunner: { data: { headers: {} } },
+                queryRunner: { data: { requestHeaders: {} } },
                 connection: { options: { extra: { config: {} } } },
             },
         } as any;
@@ -16,7 +16,7 @@ describe('find handler tests', () => {
     it('realityId property supplied in options or conditions and not in the headers, get condition of default reality', async () => {
         const connection = {
             manager: {
-                queryRunner: { data: { headers: {} } },
+                queryRunner: { data: { requestHeaders: {} } },
                 connection: { options: { extra: { config: {} } } },
             },
         } as any;
@@ -28,7 +28,9 @@ describe('find handler tests', () => {
     it('include linked oper is true in headers, get realities of real and reality in headers', async () => {
         const connection = {
             manager: {
-                queryRunner: { data: { headers: { realityId: 1, includeLinkedOper: true } } },
+                queryRunner: {
+                    data: { requestHeaders: { realityId: 1, includeLinkedOper: true } },
+                },
                 connection: { options: { extra: { config: {} } } },
             },
         } as any;
@@ -40,7 +42,9 @@ describe('find handler tests', () => {
     it('include linked oper is true in headers, get condition of default reality', async () => {
         const connection = {
             manager: {
-                queryRunner: { data: { headers: { realityId: 0, includeLinkedOper: true } } },
+                queryRunner: {
+                    data: { requestHeaders: { realityId: 0, includeLinkedOper: true } },
+                },
                 connection: { options: { extra: { config: {} } } },
             },
         } as any;
@@ -52,7 +56,9 @@ describe('find handler tests', () => {
     it('include linked oper is true in headers but false in find setting, get condition of reality in headers', async () => {
         const connection = {
             manager: {
-                queryRunner: { data: { headers: { realityId: 1, includeLinkedOper: true } } },
+                queryRunner: {
+                    data: { requestHeaders: { realityId: 1, includeLinkedOper: true } },
+                },
                 connection: { options: { extra: { config: {} } } },
             },
         } as any;
@@ -64,7 +70,7 @@ describe('find handler tests', () => {
     it('deleted property supplied in options or conditions, get condition of default setting', async () => {
         const connection = {
             manager: {
-                queryRunner: { data: { headers: {} } },
+                queryRunner: { data: { requestHeaders: {} } },
                 connection: { options: { extra: { config: {} } } },
             },
         } as any;
@@ -76,7 +82,7 @@ describe('find handler tests', () => {
     it('linked oper supplied in header property, supplied in options or conditions, get only from headers reality', async () => {
         const connection = {
             manager: {
-                queryRunner: { data: { headers: { realityId: 1 } } },
+                queryRunner: { data: { requestHeaders: { realityId: 1 } } },
                 connection: { options: { extra: { config: {} } } },
             },
         } as any;
@@ -88,7 +94,7 @@ describe('find handler tests', () => {
     it('soft delete return entities is true, get condition without limitation on deleted', async () => {
         const connection = {
             manager: {
-                queryRunner: { data: { headers: {} } },
+                queryRunner: { data: { requestHeaders: {} } },
                 connection: {
                     options: { extra: { config: { softDelete: { returnEntities: true } } } },
                 },
