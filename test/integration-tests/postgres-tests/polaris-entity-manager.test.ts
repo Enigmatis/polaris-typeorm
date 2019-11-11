@@ -1,4 +1,4 @@
-import { Connection, Like } from 'typeorm';
+import { Connection } from 'typeorm';
 import { DataVersion } from '../../../src';
 import { Author } from '../../dal/author';
 import { Book } from '../../dal/book';
@@ -7,13 +7,11 @@ import { Profile } from '../../dal/profile';
 import { User } from '../../dal/user';
 import {
     cascadeBook,
-    getExtensions,
     harryPotter,
     initDb,
     mrCascade,
     profile,
     rowling,
-    setExtensions,
     setHeaders,
     setUpTestConnection,
     user,
@@ -273,32 +271,5 @@ describe('entity manager tests', () => {
         });
         expect(books1[0].title).toEqual(cascadeBook);
         expect(books1[1].title).toEqual(harryPotter);
-    });
-
-    describe('Irrelevant entities tests', () => {
-        it('should search for irrelevant entities', async () => {
-            await initDb(connection);
-            setHeaders(connection, { dataVersion: 0 });
-            setExtensions(connection, { irrelevantEntities: {}, globalDataVersion: 0 });
-            await connection.manager.find(Book, { where: { title: Like('Harry%') } });
-            const irrelevantEntities = getExtensions(connection).irrelevantEntities;
-            const irrelevantBooks: any = await connection.manager.find(Book, {
-                where: { title: Like('Cascade%') },
-            });
-            expect(irrelevantEntities).toEqual([irrelevantBooks[0].id]);
-        });
-
-        it('should search for irrelevant entities even if deleted', async () => {
-            await initDb(connection);
-            setHeaders(connection, { dataVersion: 0 });
-            setExtensions(connection, { irrelevantEntities: {}, globalDataVersion: 0 });
-            const irrelevantBooks: any = await connection.manager.find(Book, {
-                where: { title: Like('Cascade%') },
-            });
-            await connection.manager.delete(Book, { where: { title: Like('Cascade%') } });
-            await connection.manager.find(Book, { where: { title: Like('Harry%') } });
-            const irrelevantEntities = getExtensions(connection).irrelevantEntities;
-            expect(irrelevantEntities).toEqual([irrelevantBooks[0].id]);
-        });
     });
 });
