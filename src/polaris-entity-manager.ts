@@ -118,10 +118,11 @@ export class PolarisEntityManager extends EntityManager {
         optionsOrConditions?: FindManyOptions<Entity> | any,
     ): Promise<Entity[]> {
         const run = await runAndMeasureTime(async () => {
-            return super.find(
+            let result = super.find(
                 entityClass,
                 this.calculateCriteria(entityClass, true, optionsOrConditions),
-            );
+            )
+            return result;
         });
         if (this.queryRunner) {
             this.queryRunner.data.elapsedTime = run.elapsedTime;
@@ -166,7 +167,11 @@ export class PolarisEntityManager extends EntityManager {
         if (this.queryRunner) {
             this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
-        this.connection.logger.log('log', 'finished save action successfully', this.queryRunner);
+        this.connection.logger.log(
+            'log',
+            'finished save action successfully',
+            this.queryRunner,
+        );
         return run.returnValue;
     }
 
@@ -243,11 +248,11 @@ export class PolarisEntityManager extends EntityManager {
     }
 
     private getHeaders = () =>
-        this.queryRunner && this.queryRunner.data && (this.queryRunner.data.requestHeaders || {});
+        (this.queryRunner && this.queryRunner.data && this.queryRunner.data.requestHeaders) || {};
     private getExtensions = () =>
-        this.queryRunner &&
+        (this.queryRunner &&
         this.queryRunner.data &&
-        (this.queryRunner.data.returnedExtensions || {});
+        this.queryRunner.data.returnedExtensions) || {};
 
     private calculateCriteria(target: any, includeLinkedOper: boolean, criteria: any) {
         return target.toString().includes('CommonModel')
