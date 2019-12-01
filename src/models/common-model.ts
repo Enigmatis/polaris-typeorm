@@ -68,7 +68,7 @@ export abstract class CommonModel {
         this.realityId = realityId;
     }
 
-    public setCreatedBy(createdBy: string | undefined) {
+    public setCreatedBy(createdBy?: string) {
         this.createdBy = createdBy;
     }
 
@@ -76,7 +76,7 @@ export abstract class CommonModel {
         this.creationTime = creationTime;
     }
 
-    public setLastUpdatedBy(lastUpdatedBy: string | undefined) {
+    public setLastUpdatedBy(lastUpdatedBy?: string) {
         this.lastUpdatedBy = lastUpdatedBy;
     }
 

@@ -23,15 +23,12 @@ export class CommonModelEventSubscriber implements EntitySubscriberInterface<Com
             event.connection.logger.log('log', 'prePersist began', event.queryRunner);
             await runAndMeasureTime(async () => {
                 event.entity.setDataVersion(this.getExtensions(event.manager).globalDataVersion);
-                const now = new Date(
-                    new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }),
-                );
+                const now = new Date();
                 event.entity.setCreationTime(now);
                 event.entity.setLastUpdateTime(now);
-                event.entity.setCreatedBy(this.getUpnOrRequestingSystemIdFromHeader(event.manager));
-                event.entity.setLastUpdatedBy(
-                    this.getUpnOrRequestingSystemIdFromHeader(event.manager),
-                );
+                const createdBySource = this.getUpnOrRequestingSystemIdFromHeader(event.manager);
+                event.entity.setCreatedBy(createdBySource);
+                event.entity.setLastUpdatedBy(createdBySource);
                 this.setEntityRealityId(event.manager, event.entity);
             });
             event.connection.logger.log('log', 'prePersist finished');
@@ -43,9 +40,7 @@ export class CommonModelEventSubscriber implements EntitySubscriberInterface<Com
             event.connection.logger.log('log', 'preUpdate began');
             await runAndMeasureTime(async () => {
                 event.entity.setDataVersion(this.getExtensions(event.manager).globalDataVersion);
-                const now = new Date(
-                    new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }),
-                );
+                const now = new Date();
                 event.entity.setLastUpdateTime(now);
                 event.entity.setLastUpdatedBy(
                     this.getUpnOrRequestingSystemIdFromHeader(event.manager),
@@ -69,7 +64,7 @@ export class CommonModelEventSubscriber implements EntitySubscriberInterface<Com
             manager.queryRunner &&
             manager.queryRunner.data &&
             (manager.queryRunner.data.requestHeaders || {});
-        return headers.upn ? headers.upn : headers.requestingSystemId;
+        return headers.upn || headers.requestingSystemId;
     }
 
     private getHeaders = (manager: EntityManager): PolarisRequestHeaders =>
