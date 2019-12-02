@@ -12,9 +12,10 @@ export class DataVersionHandler {
     public async updateDataVersion<Entity>() {
         const extensions: PolarisExtensions =
             (this.manager &&
-            this.manager.queryRunner &&
-            this.manager.queryRunner.data &&
-            this.manager.queryRunner.data.returnedExtensions) || {};
+                this.manager.queryRunner &&
+                this.manager.queryRunner.data &&
+                this.manager.queryRunner.data.returnedExtensions) ||
+            {};
         this.manager.connection.logger.log(
             'log',
             'Started data version job when inserting/updating entity',
