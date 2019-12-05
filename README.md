@@ -22,9 +22,9 @@ This class represents the base entity of our repository, which means that all of
 that we are going to create should extend and inherit inherit all of the `CommonModel` properties.
 It provides default fields for your entity :
 
--   createdBy - this field indicates who created the entity.
+-   createdBy(*string - Optional*) - this field indicates who created the entity.
 -   creationTime - this field indicates when does the entity created.
--   lastUpdateBy - this field indicates who last updated the entity.
+-   lastUpdateBy(*string - Optional*) - this field indicates who last updated the entity.
 -   lastUpdateTime - this field indicates when does the entity last updated.
 -   dataVersion - every repository entity is a versioned entity and contains a version related to their data - a dataVersion.
 -   realityId - this field indicates what is the reality of the entity.
