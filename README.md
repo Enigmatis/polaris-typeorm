@@ -1,4 +1,4 @@
-![Polaris-logo](static/img/polaris-logo.png)
+![Small Logo](static/img/polaris-logo.png)
 # polaris-typeorm
 [![Build Status](https://travis-ci.com/Enigmatis/polaris-typeorm.svg?branch=master)](https://travis-ci.com/Enigmatis/polaris-typeorm)
 [![NPM version](https://img.shields.io/npm/v/@enigmatis/polaris-typeorm.svg?style=flat-square)](https://www.npmjs.com/package/@enigmatis/polaris-typeorm)
