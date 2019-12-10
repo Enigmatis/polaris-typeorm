@@ -1,15 +1,5 @@
-import {
-    PolarisExtensions,
-    PolarisRequestHeaders,
-    runAndMeasureTime,
-} from '@enigmatis/polaris-common';
-import {
-    EntityManager,
-    EntitySubscriberInterface,
-    EventSubscriber,
-    InsertEvent,
-    UpdateEvent,
-} from 'typeorm';
+import { PolarisExtensions, PolarisRequestHeaders, runAndMeasureTime } from '@enigmatis/polaris-common';
+import { EntityManager, EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent } from 'typeorm';
 import { CommonModel } from '..';
 
 @EventSubscriber()
@@ -22,14 +12,13 @@ export class CommonModelEventSubscriber implements EntitySubscriberInterface<Com
         if (event.entity) {
             event.connection.logger.log('log', 'prePersist began', event.queryRunner);
             await runAndMeasureTime(async () => {
-                event.entity.setDataVersion(this.getExtensions(event.manager).globalDataVersion);
+                this.setEntityRealityId(event.manager, event.entity);
                 const now = new Date();
                 event.entity.setCreationTime(now);
                 event.entity.setLastUpdateTime(now);
                 const createdBySource = this.getUpnOrRequestingSystemIdFromHeader(event.manager);
                 event.entity.setCreatedBy(createdBySource);
                 event.entity.setLastUpdatedBy(createdBySource);
-                this.setEntityRealityId(event.manager, event.entity);
             });
             event.connection.logger.log('log', 'prePersist finished');
         }
@@ -39,7 +28,7 @@ export class CommonModelEventSubscriber implements EntitySubscriberInterface<Com
         if (event.entity) {
             event.connection.logger.log('log', 'preUpdate began');
             await runAndMeasureTime(async () => {
-                event.entity.setDataVersion(this.getExtensions(event.manager).globalDataVersion);
+                this.setEntityRealityId(event.manager, event.entity);
                 const now = new Date();
                 event.entity.setLastUpdateTime(now);
                 event.entity.setLastUpdatedBy(

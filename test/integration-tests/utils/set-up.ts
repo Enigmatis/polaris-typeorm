@@ -15,7 +15,11 @@ export const setUpTestConnection = async (): Promise<Connection> => {
     const tables = ['user', 'profile', 'book', 'author', 'library', 'dataVersion'];
     for (const table of tables) {
         if (connection.manager) {
-            await connection.manager.getRepository(table).query('DELETE FROM "' + table + '";');
+            try {
+                await connection.manager.getRepository(table).query('DELETE FROM "' + table + '";');
+            } catch (e) {
+                polarisGraphQLLogger.error(e.message);
+            }
         }
     }
     return connection;

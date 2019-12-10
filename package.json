@@ -60,10 +60,10 @@
   },
   "homepage": "https://github.com/Enigmatis/polaris-typeorm#readme",
   "dependencies": {
-    "@enigmatis/polaris-common": "^1.0.6",
-    "@enigmatis/polaris-logs": "^2.5.4",
+    "@enigmatis/polaris-common": "^1.0.10",
+    "@enigmatis/polaris-logs": "^2.6.1",
     "reflect-metadata": "^0.1.13",
-    "typeorm": "^0.2.20"
+    "typeorm": "^0.2.21"
   },
   "devDependencies": {
     "@commitlint/cli": "^8.2.0",
