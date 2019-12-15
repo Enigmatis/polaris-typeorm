@@ -29,7 +29,7 @@ export class SoftDeleteHandler {
         }
         const metadata = this.manager.connection.getMetadata(targetOrEntity);
         if (metadata && metadata.relations) {
-            metadata.relations.forEach(relation => {
+            for (const relation of metadata.relations) {
                 const relationMetadata = relation.inverseEntityMetadata;
                 const hasCascadeDeleteFields =
                     relationMetadata.foreignKeys.filter(
@@ -46,9 +46,9 @@ export class SoftDeleteHandler {
                     x[relation.propertyName] = In(
                         softDeletedEntities.raw.map((row: { id: string }) => row.id),
                     );
-                    return this.softDeleteRecursive(relationMetadata.targetName, x);
+                    await this.softDeleteRecursive(relationMetadata.targetName, x);
                 }
-            });
+            }
         }
     }
 
