@@ -43,7 +43,7 @@ export class PolarisEntityManager extends EntityManager {
             | any,
     ): Promise<DeleteResult> {
         const run = await runAndMeasureTime(async () => {
-            return this.wrapTransaction(async () => {
+            await this.wrapTransaction(async () => {
                 await this.dataVersionHandler.updateDataVersion();
                 const config = this.connection.options.extra.config;
                 if (
@@ -136,7 +136,7 @@ export class PolarisEntityManager extends EntityManager {
     ): Promise<T | T[]> {
         const run = await runAndMeasureTime(async () => {
             if (targetOrEntity.toString().includes('CommonModel')) {
-                return this.wrapTransaction(async () => {
+                await this.wrapTransaction(async () => {
                     await this.dataVersionHandler.updateDataVersion();
                     await this.saveDataVersion(maybeEntityOrOptions);
                     return super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
@@ -167,7 +167,7 @@ export class PolarisEntityManager extends EntityManager {
         partialEntity: any,
     ): Promise<UpdateResult> {
         const run = await runAndMeasureTime(async () => {
-            return this.wrapTransaction(async () => {
+            await this.wrapTransaction(async () => {
                 await this.dataVersionHandler.updateDataVersion();
                 const globalDataVersion = this.getExtensions().globalDataVersion;
                 partialEntity = { ...partialEntity, dataVersion: globalDataVersion };
