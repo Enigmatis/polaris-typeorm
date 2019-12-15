@@ -1,5 +1,15 @@
-import { PolarisExtensions, PolarisRequestHeaders, runAndMeasureTime } from '@enigmatis/polaris-common';
-import { EntityManager, EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent } from 'typeorm';
+import {
+    PolarisExtensions,
+    PolarisRequestHeaders,
+    runAndMeasureTime,
+} from '@enigmatis/polaris-common';
+import {
+    EntityManager,
+    EntitySubscriberInterface,
+    EventSubscriber,
+    InsertEvent,
+    UpdateEvent,
+} from 'typeorm';
 import { CommonModel } from '..';
 
 @EventSubscriber()

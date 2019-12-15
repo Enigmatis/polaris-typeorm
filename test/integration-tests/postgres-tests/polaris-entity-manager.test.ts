@@ -39,8 +39,7 @@ describe('entity manager tests', () => {
         try {
             await connection.close();
             // tslint:disable-next-line:no-empty
-        } catch (e) {
-        }
+        } catch (e) {}
     });
     describe('soft delete tests', () => {
         it('delete without criteria, should throw error', async () => {
