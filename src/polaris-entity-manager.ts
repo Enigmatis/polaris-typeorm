@@ -59,7 +59,7 @@ export class PolarisEntityManager extends EntityManager {
             this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished delete action successfully', this.queryRunner);
-        return run.returnValue;
+        return run.returnValue as any;
     }
 
     public async findOne<Entity>(
@@ -92,7 +92,7 @@ export class PolarisEntityManager extends EntityManager {
             'finished find one action successfully',
             this.queryRunner,
         );
-        return run.returnValue;
+        return run.returnValue as any;
     }
 
     public async find<Entity>(
@@ -109,7 +109,7 @@ export class PolarisEntityManager extends EntityManager {
             this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished find action successfully', this.queryRunner);
-        return run.returnValue;
+        return run.returnValue as any;
     }
 
     public async count<Entity>(
@@ -126,7 +126,7 @@ export class PolarisEntityManager extends EntityManager {
             this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished count action successfully', this.queryRunner);
-        return run.returnValue;
+        return run.returnValue as any;
     }
 
     public async save<Entity, T extends DeepPartial<Entity>>(
@@ -149,7 +149,7 @@ export class PolarisEntityManager extends EntityManager {
             this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished save action successfully', this.queryRunner);
-        return run.returnValue;
+        return run.returnValue as any;
     }
 
     public async update<Entity>(
@@ -178,7 +178,7 @@ export class PolarisEntityManager extends EntityManager {
             this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished update action successfully', this.queryRunner);
-        return run.returnValue;
+        return run.returnValue as any;
     }
 
     private async wrapTransaction(action: any) {

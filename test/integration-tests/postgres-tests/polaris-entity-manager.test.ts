@@ -36,7 +36,11 @@ describe('entity manager tests', () => {
         setHeaders(connection, { res: { locals: {} } } as any);
     });
     afterEach(async () => {
-        await connection.close();
+        try {
+            await connection.close();
+            // tslint:disable-next-line:no-empty
+        } catch (e) {
+        }
     });
     describe('soft delete tests', () => {
         it('delete without criteria, should throw error', async () => {

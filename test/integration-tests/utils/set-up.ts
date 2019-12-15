@@ -10,7 +10,7 @@ import { User } from '../../dal/user';
 import { applicationLogProperties, connectionOptions, loggerConfig } from './test-properties';
 
 export const setUpTestConnection = async (): Promise<Connection> => {
-    const polarisGraphQLLogger = await new PolarisLogger(applicationLogProperties, loggerConfig);
+    const polarisGraphQLLogger = await new PolarisLogger(loggerConfig, applicationLogProperties);
     const connection = await createPolarisConnection(connectionOptions, polarisGraphQLLogger);
     const tables = ['user', 'profile', 'book', 'author', 'library', 'dataVersion'];
     for (const table of tables) {
