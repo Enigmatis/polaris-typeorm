@@ -1,4 +1,4 @@
-import { runAndMeasureTime } from '@enigmatis/polaris-common';
+import { PolarisExtensions, runAndMeasureTime } from '@enigmatis/polaris-common';
 import {
     Connection,
     DeepPartial,
@@ -21,9 +21,6 @@ export class PolarisEntityManager extends EntityManager {
 
     constructor(connection: Connection) {
         super(connection, connection.createQueryRunner());
-        if (this.queryRunner && this.queryRunner.data) {
-            this.queryRunner.data = { requestHeaders: {}, returnedExtensions: {} };
-        }
         this.dataVersionHandler = new DataVersionHandler(this);
         this.findHandler = new FindHandler(this);
         this.softDeleteHandler = new SoftDeleteHandler(this);
@@ -31,7 +28,7 @@ export class PolarisEntityManager extends EntityManager {
 
     public async delete<Entity>(
         targetOrEntity: any,
-        criteria:
+        polarisCriteria: (
             | string
             | string[]
             | number
@@ -40,19 +37,20 @@ export class PolarisEntityManager extends EntityManager {
             | Date[]
             | ObjectID
             | ObjectID[]
-            | any,
+            | any
+        ) & { context: any },
     ): Promise<DeleteResult> {
         const run = await runAndMeasureTime(async () => {
             await this.wrapTransaction(async () => {
-                await this.dataVersionHandler.updateDataVersion();
+                await this.dataVersionHandler.updateDataVersion(polarisCriteria.context);
                 const config = this.connection.options.extra.config;
                 if (
                     (config && config.allowSoftDelete === false) ||
                     !targetOrEntity.toString().includes('CommonModel')
                 ) {
-                    return super.delete(targetOrEntity, criteria);
+                    return super.delete(targetOrEntity, polarisCriteria.citeria);
                 }
-                return this.softDeleteHandler.softDeleteRecursive(targetOrEntity, criteria);
+                return this.softDeleteHandler.softDeleteRecursive(targetOrEntity, polarisCriteria);
             });
         });
         if (this.queryRunner && this.queryRunner.data) {
@@ -132,21 +130,21 @@ export class PolarisEntityManager extends EntityManager {
     public async save<Entity, T extends DeepPartial<Entity>>(
         targetOrEntity: any,
         maybeEntityOrOptions?: T | T[],
-        maybeOptions?: SaveOptions,
+        context?: any,
     ): Promise<T | T[]> {
         const run = await runAndMeasureTime(async () => {
             if (targetOrEntity.toString().includes('CommonModel')) {
                 await this.wrapTransaction(async () => {
-                    await this.dataVersionHandler.updateDataVersion();
-                    await this.saveDataVersion(maybeEntityOrOptions);
-                    return super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
+                    await this.dataVersionHandler.updateDataVersion(context);
+                    await this.saveDataVersion(context.returnedExtensions, maybeEntityOrOptions);
+                    return super.save(targetOrEntity, maybeEntityOrOptions);
                 });
             } else {
-                return super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
+                return super.save(targetOrEntity, maybeEntityOrOptions);
             }
         });
-        if (this.queryRunner) {
-            this.queryRunner.data.elapsedTime = run.elapsedTime;
+        if (context) {
+            context.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished save action successfully', this.queryRunner);
         return run.returnValue as any;
@@ -154,7 +152,7 @@ export class PolarisEntityManager extends EntityManager {
 
     public async update<Entity>(
         target: any,
-        criteria:
+        polarisCriteria:
             | string
             | string[]
             | number
@@ -168,14 +166,15 @@ export class PolarisEntityManager extends EntityManager {
     ): Promise<UpdateResult> {
         const run = await runAndMeasureTime(async () => {
             await this.wrapTransaction(async () => {
-                await this.dataVersionHandler.updateDataVersion();
-                const globalDataVersion = this.getExtensions().globalDataVersion;
+                await this.dataVersionHandler.updateDataVersion(polarisCriteria.context);
+                const globalDataVersion =
+                    polarisCriteria.context.returnedExtensions.globalDataVersion;
                 partialEntity = { ...partialEntity, dataVersion: globalDataVersion };
-                return super.update(target, criteria, partialEntity);
+                return super.update(target, polarisCriteria.criteria, partialEntity);
             });
         });
-        if (this.queryRunner && this.queryRunner.data) {
-            this.queryRunner.data.elapsedTime = run.elapsedTime;
+        if (polarisCriteria.context) {
+            polarisCriteria.context.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished update action successfully', this.queryRunner);
         return run.returnValue as any;
@@ -203,19 +202,15 @@ export class PolarisEntityManager extends EntityManager {
         }
     }
 
-    private async saveDataVersion(maybeEntityOrOptions?: any) {
+    private async saveDataVersion(extensions: PolarisExtensions, maybeEntityOrOptions?: any) {
         if (maybeEntityOrOptions instanceof Array) {
             for (const t of maybeEntityOrOptions) {
-                t.dataVersion = this.getExtensions().globalDataVersion;
+                t.dataVersion = extensions.globalDataVersion;
             }
         } else {
-            maybeEntityOrOptions.dataVersion = this.getExtensions().globalDataVersion;
+            maybeEntityOrOptions.dataVersion = extensions.globalDataVersion;
         }
     }
-
-    private getExtensions = () =>
-        (this.queryRunner && this.queryRunner.data && this.queryRunner.data.returnedExtensions) ||
-        {};
 
     private calculateCriteria(target: any, includeLinkedOper: boolean, criteria: any) {
         return target.toString().includes('CommonModel')

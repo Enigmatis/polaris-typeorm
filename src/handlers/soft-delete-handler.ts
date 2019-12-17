@@ -10,19 +10,25 @@ export class SoftDeleteHandler {
 
     public async softDeleteRecursive(
         targetOrEntity: any,
-        criteria:
-            | string
-            | string[]
-            | number
-            | number[]
-            | Date
-            | Date[]
-            | ObjectID
-            | ObjectID[]
-            | any,
+        polarisCriteria: {
+            criteria:
+                | string
+                | string[]
+                | number
+                | number[]
+                | Date
+                | Date[]
+                | ObjectID
+                | ObjectID[]
+                | any;
+            context: any;
+        },
     ): Promise<void> {
-        const softDeletedEntities = await this.updateWithReturningIds(targetOrEntity, criteria, {
-            deleted: true,
+        const softDeletedEntities = await this.updateWithReturningIds(
+            targetOrEntity,
+            polarisCriteria.criteria,
+            {
+                deleted: true,
         });
         if (softDeletedEntities.affected === 0) {
             return;
@@ -46,7 +52,10 @@ export class SoftDeleteHandler {
                     x[relation.propertyName] = In(
                         softDeletedEntities.raw.map((row: { id: string }) => row.id),
                     );
-                    await this.softDeleteRecursive(relationMetadata.targetName, x);
+                    await this.softDeleteRecursive(relationMetadata.targetName, {
+                        criteria: x,
+                        context: polarisCriteria.context,
+                    });
                 }
             }
         }
