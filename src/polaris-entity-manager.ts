@@ -1,4 +1,8 @@
-import { PolarisExtensions, runAndMeasureTime } from '@enigmatis/polaris-common';
+import {
+    PolarisExtensions,
+    PolarisGraphQLContext,
+    runAndMeasureTime,
+} from '@enigmatis/polaris-common';
 import {
     Connection,
     DeepPartial,
@@ -28,17 +32,17 @@ export class PolarisEntityManager extends EntityManager {
 
     public async delete<Entity>(
         targetOrEntity: any,
-        polarisCriteria: (
-            | string
-            | string[]
-            | number
-            | number[]
-            | Date
-            | Date[]
-            | ObjectID
-            | ObjectID[]
-            | any
-        ) & { context: any },
+        polarisCriteria: {
+            criteria: | string
+                | string[]
+                | number
+                | number[]
+                | Date
+                | Date[]
+                | ObjectID
+                | ObjectID[]
+                | any
+            context: PolarisGraphQLContext},
     ): Promise<DeleteResult> {
         const run = await runAndMeasureTime(async () => {
             await this.wrapTransaction(async () => {
@@ -48,37 +52,31 @@ export class PolarisEntityManager extends EntityManager {
                     (config && config.allowSoftDelete === false) ||
                     !targetOrEntity.toString().includes('CommonModel')
                 ) {
-                    return super.delete(targetOrEntity, polarisCriteria.citeria);
+                    return super.delete(targetOrEntity, polarisCriteria.criteria);
                 }
-                return this.softDeleteHandler.softDeleteRecursive(targetOrEntity, polarisCriteria);
+                return this.softDeleteHandler.softDeleteRecursive(
+                    targetOrEntity,
+                    polarisCriteria.criteria,
+                );
             });
         });
-        if (this.queryRunner && this.queryRunner.data) {
-            this.queryRunner.data.elapsedTime = run.elapsedTime;
-        }
+
+        //TODO:
+        // get elapsed time into the context
+
         this.connection.logger.log('log', 'finished delete action successfully', this.queryRunner);
         return run.returnValue as any;
     }
 
     public async findOne<Entity>(
         entityClass: any,
-        idOrOptionsOrConditions?:
-            | string
-            | string[]
-            | number
-            | number[]
-            | Date
-            | Date[]
-            | ObjectID
-            | ObjectID[]
-            | FindOneOptions<Entity>
-            | any,
+        polarisCriteria? : any,
         maybeOptions?: FindOneOptions<Entity>,
     ): Promise<Entity | undefined> {
         const run = await runAndMeasureTime(async () => {
             return super.findOne(
                 entityClass,
-                this.calculateCriteria(entityClass, true, idOrOptionsOrConditions),
+                this.calculateCriteria(entityClass, true, polarisCriteria),
                 maybeOptions,
             );
         });

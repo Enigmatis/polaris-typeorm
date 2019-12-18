@@ -1,4 +1,4 @@
-import { PolarisExtensions } from '@enigmatis/polaris-common';
+import { PolarisExtensions, PolarisGraphQLContext } from '@enigmatis/polaris-common';
 import { EntityManager } from 'typeorm';
 import { DataVersion } from '..';
 
@@ -9,7 +9,7 @@ export class DataVersionHandler {
         this.manager = manager;
     }
 
-    public async updateDataVersion<Entity>(context: any) {
+    public async updateDataVersion<Entity>(context: PolarisGraphQLContext) {
         const extensions: PolarisExtensions = (context && context.returnedExtensions) || {};
         this.manager.connection.logger.log(
             'log',
@@ -48,7 +48,7 @@ export class DataVersionHandler {
                 }
             }
         }
-        if (context && extensions){
+        if (context && extensions) {
             context.returnedExtensions = extensions;
         }
         this.manager.connection.logger.log(
