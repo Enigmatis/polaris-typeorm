@@ -1,6 +1,6 @@
 import {
     PolarisExtensions,
-    PolarisGraphQLContext,
+    PolarisGraphQLContext, PolarisRequestHeaders,
     runAndMeasureTime,
 } from '@enigmatis/polaris-common';
 import {
@@ -8,16 +8,14 @@ import {
     DeepPartial,
     DeleteResult,
     EntityManager,
-    FindManyOptions,
     FindOneOptions,
-    ObjectID,
-    SaveOptions,
     UpdateResult,
 } from 'typeorm';
 import {DataVersionHandler} from './handlers/data-version-handler';
 import {FindHandler} from './handlers/find-handler';
 import {SoftDeleteHandler} from './handlers/soft-delete-handler';
 import {PolarisFindOptions} from "./contextable-options/polaris-find-options";
+import {PolarisSaveOptions} from "./contextable-options/polaris-save-options";
 
 export class PolarisEntityManager extends EntityManager {
     public dataVersionHandler: DataVersionHandler;
@@ -54,7 +52,6 @@ export class PolarisEntityManager extends EntityManager {
 
         //TODO:
         // get elapsed time into the context
-        polarisCriteria.context.returnedExtensions.irrelevantEntities = ["hi"];
 
         this.connection.logger.log('log', 'finished delete action successfully', this.queryRunner);
         return run.returnValue as any;
@@ -68,7 +65,7 @@ export class PolarisEntityManager extends EntityManager {
         const run = await runAndMeasureTime(async () => {
             return super.findOne(
                 entityClass,
-                this.calculateCriteria(entityClass, true, polarisCriteria.criteria | polarisCriteria),
+                this.calculateCriteria(entityClass, true, polarisCriteria),
                 maybeOptions,
             );
         });
@@ -81,7 +78,6 @@ export class PolarisEntityManager extends EntityManager {
             'finished find one action successfully',
             this.queryRunner,
         );
-        polarisCriteria.context.returnedExtensions.poop = true;
         return run.returnValue as any;
     }
 
@@ -92,25 +88,24 @@ export class PolarisEntityManager extends EntityManager {
         const run = await runAndMeasureTime(async () => {
             return super.find(
                 entityClass,
-                this.calculateCriteria(entityClass, true, polarisCriteria.criteria),
+                this.calculateCriteria(entityClass, true, polarisCriteria),
             );
         });
         if (this.queryRunner) {
             this.queryRunner.data.elapsedTime = run.elapsedTime;
         }
         this.connection.logger.log('log', 'finished find action successfully', this.queryRunner);
-        polarisCriteria.context.returnedExtensions.irrelevantEntities = ["poopsik"];
         return run.returnValue as any;
     }
 
     public async count<Entity>(
         entityClass: any,
-        polarisCriteria?: { criteria: FindManyOptions<Entity> | any, context: PolarisGraphQLContext } | any,
+        polarisCriteria?: PolarisFindOptions<Entity> | any,
     ): Promise<number> {
         const run = await runAndMeasureTime(async () => {
             return super.count(
                 entityClass,
-                this.calculateCriteria(entityClass, false, polarisCriteria.criteria),
+                this.calculateCriteria(entityClass, false, polarisCriteria),
             );
         });
 
@@ -122,42 +117,31 @@ export class PolarisEntityManager extends EntityManager {
 
     public async save<Entity, T extends DeepPartial<Entity>>(
         targetOrEntity: any,
-        polarisSave?: { entities: T | T[], context: PolarisGraphQLContext } | any,
+        polarisSaveOptions?: PolarisSaveOptions<Entity, T> | any,
         maybeOptions?: any,
     ): Promise<T | T[]> {
         const run = await runAndMeasureTime(async () => {
             if (targetOrEntity.toString().includes('CommonModel')) {
                 await this.wrapTransaction(async () => {
-                    await this.dataVersionHandler.updateDataVersion(polarisSave.context);
-                    await this.saveDataVersion(polarisSave.context.returnedExtensions, polarisSave.entities);
-                    return super.save(targetOrEntity, polarisSave.entities);
+                    await this.dataVersionHandler.updateDataVersion(polarisSaveOptions.context);
+                    await this.setInfoOfCommonModel(polarisSaveOptions.context, polarisSaveOptions.entities);
+
+                    return super.save(targetOrEntity, polarisSaveOptions.entities);
                 });
             } else {
-                return super.save(targetOrEntity, polarisSave.entities);
+                return super.save(targetOrEntity, polarisSaveOptions.entities || polarisSaveOptions);
             }
         });
+
         // Todo: get elapsed
-        // if (polarisSave.context) {
-        //     polarisSave.context.elapsedTime = run.elapsedTime;
-        // }
+
         this.connection.logger.log('log', 'finished save action successfully', this.queryRunner);
         return run.returnValue as any;
     }
 
     public async update<Entity>(
         target: any,
-        polarisCriteria: {
-            criteria: | string
-                | string[]
-                | number
-                | number[]
-                | Date
-                | Date[]
-                | ObjectID
-                | ObjectID[]
-                | any,
-            context: PolarisGraphQLContext
-        } | any,
+        polarisCriteria: PolarisFindOptions<Entity> | any,
         partialEntity: any,
     ): Promise<UpdateResult> {
         const run = await runAndMeasureTime(async () => {
@@ -165,15 +149,20 @@ export class PolarisEntityManager extends EntityManager {
                 await this.dataVersionHandler.updateDataVersion(polarisCriteria.context);
                 const globalDataVersion =
                     polarisCriteria.context.returnedExtensions.globalDataVersion;
-                partialEntity = {...partialEntity, dataVersion: globalDataVersion};
+                const upnOrRequestingSystemId = polarisCriteria.context.requestHeaders ?
+                    (polarisCriteria.context.requestHeaders.upn ||
+                        polarisCriteria.context.requestHeaders.requestingSystemId) : '';
+                partialEntity = {
+                    ...partialEntity,
+                    dataVersion: globalDataVersion,
+                    lastUpdatedBy: upnOrRequestingSystemId
+                };
+                delete partialEntity.realityId;
                 return super.update(target, polarisCriteria.criteria, partialEntity);
             });
         });
 
         // Todo Elapsed
-        // if (polarisCriteria.context) {
-        //     polarisCriteria.context.elapsedTime = run.elapsedTime;
-        // }
         this.connection.logger.log('log', 'finished update action successfully', this.queryRunner);
         return run.returnValue as any;
     }
@@ -200,13 +189,17 @@ export class PolarisEntityManager extends EntityManager {
         }
     }
 
-    private async saveDataVersion(extensions: PolarisExtensions, maybeEntityOrOptions?: any) {
+    private async setInfoOfCommonModel(context: PolarisGraphQLContext, maybeEntityOrOptions?: any) {
         if (maybeEntityOrOptions instanceof Array) {
             for (const t of maybeEntityOrOptions) {
-                t.dataVersion = extensions.globalDataVersion;
+                t.dataVersion = context.returnedExtensions.globalDataVersion;
+                t.realityId = context.requestHeaders.realityId;
+                t.createdBy = context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
             }
         } else {
-            maybeEntityOrOptions.dataVersion = extensions.globalDataVersion;
+            maybeEntityOrOptions.dataVersion = context.returnedExtensions.globalDataVersion;
+            maybeEntityOrOptions.realityId = context.requestHeaders.realityId;
+            maybeEntityOrOptions.createdBy = context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
         }
     }
 

@@ -22,13 +22,13 @@ export class CommonModelEventSubscriber implements EntitySubscriberInterface<Com
         if (event.entity) {
             event.connection.logger.log('log', 'prePersist began', event.queryRunner);
             await runAndMeasureTime(async () => {
-                this.setEntityRealityId(event.manager, event.entity);
+                // this.setEntityRealityId(event.manager, event.entity);
                 const now = new Date();
                 event.entity.setCreationTime(now);
                 event.entity.setLastUpdateTime(now);
-                const createdBySource = this.getUpnOrRequestingSystemIdFromHeader(event.manager);
-                event.entity.setCreatedBy(createdBySource);
-                event.entity.setLastUpdatedBy(createdBySource);
+                // const createdBySource = this.getUpnOrRequestingSystemIdFromHeader(event.manager);
+                // event.entity.setCreatedBy(createdBySource);
+                // event.entity.setLastUpdatedBy(createdBySource);
             });
             event.connection.logger.log('log', 'prePersist finished');
         }
@@ -38,12 +38,12 @@ export class CommonModelEventSubscriber implements EntitySubscriberInterface<Com
         if (event.entity) {
             event.connection.logger.log('log', 'preUpdate began');
             await runAndMeasureTime(async () => {
-                this.setEntityRealityId(event.manager, event.entity);
+                // this.setEntityRealityId(event.manager, event.entity);
                 const now = new Date();
                 event.entity.setLastUpdateTime(now);
-                event.entity.setLastUpdatedBy(
-                    this.getUpnOrRequestingSystemIdFromHeader(event.manager),
-                );
+                // event.entity.setLastUpdatedBy(
+                //     this.getUpnOrRequestingSystemIdFromHeader(event.manager),
+                // );
             });
             event.connection.logger.log('log', 'preUpdate finished');
         }

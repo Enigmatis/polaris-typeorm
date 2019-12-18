@@ -1,4 +1,4 @@
-import { EntityManager, In, ObjectID } from 'typeorm';
+import {EntityManager, In, ObjectID, UpdateResult} from 'typeorm';
 import { CommonModel } from '..';
 
 export class SoftDeleteHandler {
@@ -20,12 +20,13 @@ export class SoftDeleteHandler {
             | ObjectID
             | ObjectID[]
             | any,
-    ): Promise<void> {
+    ): Promise<UpdateResult> {
         const softDeletedEntities = await this.updateWithReturningIds(targetOrEntity, criteria, {
             deleted: true,
+            // Todo: lastUpdatedBy
         });
         if (softDeletedEntities.affected === 0) {
-            return;
+            return softDeletedEntities;
         }
         const metadata = this.manager.connection.getMetadata(targetOrEntity);
         if (metadata && metadata.relations) {
@@ -50,6 +51,8 @@ export class SoftDeleteHandler {
                 }
             }
         }
+
+        return softDeletedEntities;
     }
 
     private updateWithReturningIds(
