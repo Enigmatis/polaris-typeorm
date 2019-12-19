@@ -1,5 +1,6 @@
 import { PolarisLogger } from '@enigmatis/polaris-logs';
 import { ConnectionOptions, createConnection } from 'typeorm';
+import { CommonModel, DataVersion } from '..';
 import { PolarisEntityManager } from '../polaris-entity-manager';
 import { PolarisTypeormLogger } from '../polaris-typeorm-logger';
 import { TypeORMConfig } from '../typeorm-config';
@@ -15,6 +16,9 @@ export async function createPolarisConnection(
         ? Object.assign(options.extra, configObj)
         : Object.assign(options, { extra: configObj });
     Object.assign(options, { subscribers: ['src/subscribers/*.ts', options.subscribers] });
+    options.entities
+        ? Object.assign(options.entities, [...options.entities, CommonModel, DataVersion])
+        : Object.assign(options, { entities: [CommonModel, DataVersion] });
     const connection = await createConnection(options);
     Object.defineProperty(connection, 'manager', { value: new PolarisEntityManager(connection) });
     return connection;
