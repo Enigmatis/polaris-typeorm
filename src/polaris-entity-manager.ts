@@ -14,7 +14,7 @@ import {
 import {DataVersionHandler} from './handlers/data-version-handler';
 import {FindHandler} from './handlers/find-handler';
 import {SoftDeleteHandler} from './handlers/soft-delete-handler';
-import {PolarisFindOptions} from "./contextable-options/polaris-find-options";
+import {PolarisFindOneOptions} from "./contextable-options/polaris-find-one-options";
 import {PolarisSaveOptions} from "./contextable-options/polaris-save-options";
 
 export class PolarisEntityManager extends EntityManager {
@@ -31,7 +31,7 @@ export class PolarisEntityManager extends EntityManager {
 
     public async delete<Entity>(
         targetOrEntity: any,
-        polarisCriteria: PolarisFindOptions<Entity>,
+        polarisCriteria: PolarisFindOneOptions<Entity>,
     ): Promise<DeleteResult> {
         const run = await runAndMeasureTime(async () => {
             await this.wrapTransaction(async () => {
@@ -59,13 +59,13 @@ export class PolarisEntityManager extends EntityManager {
 
     public async findOne<Entity>(
         entityClass: any,
-        polarisCriteria: PolarisFindOptions<Entity> | any,
+        polarisCriteria: PolarisFindOneOptions<Entity> | any,
         maybeOptions?: FindOneOptions<Entity>,
     ): Promise<Entity | undefined> {
         const run = await runAndMeasureTime(async () => {
             return super.findOne(
                 entityClass,
-                this.calculateCriteria(entityClass, true, polarisCriteria),
+                this.calculateCriteria<Entity>(entityClass, true, polarisCriteria),
                 maybeOptions,
             );
         });
@@ -83,12 +83,12 @@ export class PolarisEntityManager extends EntityManager {
 
     public async find<Entity>(
         entityClass: any,
-        polarisCriteria?: PolarisFindOptions<Entity> | any,
+        polarisCriteria?: PolarisFindOneOptions<Entity> | any,
     ): Promise<Entity[]> {
         const run = await runAndMeasureTime(async () => {
             return super.find(
                 entityClass,
-                this.calculateCriteria(entityClass, true, polarisCriteria),
+                this.calculateCriteria<Entity>(entityClass, true, polarisCriteria),
             );
         });
         if (this.queryRunner) {
@@ -100,12 +100,12 @@ export class PolarisEntityManager extends EntityManager {
 
     public async count<Entity>(
         entityClass: any,
-        polarisCriteria?: PolarisFindOptions<Entity> | any,
+        polarisCriteria?: PolarisFindOneOptions<Entity> | any,
     ): Promise<number> {
         const run = await runAndMeasureTime(async () => {
             return super.count(
                 entityClass,
-                this.calculateCriteria(entityClass, false, polarisCriteria),
+                this.calculateCriteria<Entity>(entityClass, false, polarisCriteria),
             );
         });
 
@@ -141,7 +141,7 @@ export class PolarisEntityManager extends EntityManager {
 
     public async update<Entity>(
         target: any,
-        polarisCriteria: PolarisFindOptions<Entity> | any,
+        polarisCriteria: PolarisFindOneOptions<Entity> | any,
         partialEntity: any,
     ): Promise<UpdateResult> {
         const run = await runAndMeasureTime(async () => {
@@ -151,7 +151,8 @@ export class PolarisEntityManager extends EntityManager {
                     polarisCriteria.context.returnedExtensions.globalDataVersion;
                 const upnOrRequestingSystemId = polarisCriteria.context.requestHeaders ?
                     (polarisCriteria.context.requestHeaders.upn ||
-                        polarisCriteria.context.requestHeaders.requestingSystemId) : '';
+                      polarisCriteria.context.requestHeaders.requestingSystemId
+                    : '';
                 partialEntity = {
                     ...partialEntity,
                     dataVersion: globalDataVersion,
@@ -203,9 +204,9 @@ export class PolarisEntityManager extends EntityManager {
         }
     }
 
-    private calculateCriteria(target: any, includeLinkedOper: boolean, criteria: any) {
+    private calculateCriteria<Entity>(target: any, includeLinkedOper: boolean, criteria: any) {
         return target.toString().includes('CommonModel')
-            ? this.findHandler.findConditions(includeLinkedOper, criteria)
+            ? this.findHandler.findConditions<Entity>(includeLinkedOper, criteria)
             : criteria;
     }
 }
