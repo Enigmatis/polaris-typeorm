@@ -1,4 +1,4 @@
-import {EntityManager, In, ObjectID, UpdateResult} from 'typeorm';
+import { EntityManager, In, ObjectID, UpdateResult } from 'typeorm';
 import { CommonModel } from '..';
 
 export class SoftDeleteHandler {
@@ -10,20 +10,11 @@ export class SoftDeleteHandler {
 
     public async softDeleteRecursive(
         targetOrEntity: any,
-        criteria:
-            | string
-            | string[]
-            | number
-            | number[]
-            | Date
-            | Date[]
-            | ObjectID
-            | ObjectID[]
-            | any,
+        criteria: string | string[] | any,
     ): Promise<UpdateResult> {
         const softDeletedEntities = await this.updateWithReturningIds(targetOrEntity, criteria, {
             deleted: true,
-            // Todo: lastUpdatedBy
+            // Todo: lastUpdatedBy & BY WHOM
         });
         if (softDeletedEntities.affected === 0) {
             return softDeletedEntities;
@@ -57,16 +48,7 @@ export class SoftDeleteHandler {
 
     private updateWithReturningIds(
         target: any,
-        criteria:
-            | string
-            | string[]
-            | number
-            | number[]
-            | Date
-            | Date[]
-            | ObjectID
-            | ObjectID[]
-            | any,
+        criteria: string | string[] | any,
         partialEntity: any,
     ) {
         // if user passed empty criteria or empty list of criterias, then throw an error
@@ -77,16 +59,11 @@ export class SoftDeleteHandler {
             (criteria instanceof Array && criteria.length === 0)
         ) {
             return Promise.reject(
-                new Error(`Empty criteria(s) are not allowed for the update method.`),
+                new Error(`Empty criteria(s) are not allowed for the delete method.`),
             );
         }
 
-        if (
-            typeof criteria === 'string' ||
-            typeof criteria === 'number' ||
-            criteria instanceof Date ||
-            criteria instanceof Array
-        ) {
+        if (typeof criteria === 'string' || criteria instanceof Array) {
             return this.manager
                 .createQueryBuilder()
                 .update(target)

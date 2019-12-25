@@ -1,21 +1,20 @@
-import {
-    PolarisExtensions,
-    PolarisGraphQLContext, PolarisRequestHeaders,
-    runAndMeasureTime,
-} from '@enigmatis/polaris-common';
+import { PolarisGraphQLContext, runAndMeasureTime } from '@enigmatis/polaris-common';
 import {
     Connection,
     DeepPartial,
     DeleteResult,
     EntityManager,
     FindOneOptions,
+    ObjectID,
     UpdateResult,
 } from 'typeorm';
-import {DataVersionHandler} from './handlers/data-version-handler';
-import {FindHandler} from './handlers/find-handler';
-import {SoftDeleteHandler} from './handlers/soft-delete-handler';
-import {PolarisFindOneOptions} from "./contextable-options/polaris-find-one-options";
-import {PolarisSaveOptions} from "./contextable-options/polaris-save-options";
+import { PolarisCriteria } from './contextable-options/polaris-criteria';
+import { PolarisFindManyOptions } from './contextable-options/polaris-find-many-options';
+import { PolarisFindOneOptions } from './contextable-options/polaris-find-one-options';
+import { PolarisSaveOptions } from './contextable-options/polaris-save-options';
+import { DataVersionHandler } from './handlers/data-version-handler';
+import { FindHandler } from './handlers/find-handler';
+import { SoftDeleteHandler } from './handlers/soft-delete-handler';
 
 export class PolarisEntityManager extends EntityManager {
     public dataVersionHandler: DataVersionHandler;
@@ -31,141 +30,138 @@ export class PolarisEntityManager extends EntityManager {
 
     public async delete<Entity>(
         targetOrEntity: any,
-        polarisCriteria: PolarisFindOneOptions<Entity>,
+        criteria:
+            | string
+            | string[]
+            | number
+            | number[]
+            | Date
+            | Date[]
+            | ObjectID
+            | ObjectID[]
+            | any,
     ): Promise<DeleteResult> {
-        const run = await runAndMeasureTime(async () => {
-            await this.wrapTransaction(async () => {
-                await this.dataVersionHandler.updateDataVersion(polarisCriteria.context);
+        if (criteria instanceof PolarisCriteria) {
+            return this.wrapTransaction(async () => {
+                await this.dataVersionHandler.updateDataVersion(criteria.context);
                 const config = this.connection.options.extra.config;
                 if (
                     (config && config.allowSoftDelete === false) ||
                     !targetOrEntity.toString().includes('CommonModel')
                 ) {
-                    return super.delete(targetOrEntity, polarisCriteria.criteria);
+                    return super.delete(targetOrEntity, criteria.criteria);
                 }
                 return this.softDeleteHandler.softDeleteRecursive(
                     targetOrEntity,
-                    polarisCriteria.criteria,
+                    criteria.criteria,
                 );
             });
-        });
-
-        //TODO:
-        // get elapsed time into the context
-
-        this.connection.logger.log('log', 'finished delete action successfully', this.queryRunner);
-        return run.returnValue as any;
+        } else {
+            return super.delete(targetOrEntity, criteria);
+        }
     }
 
     public async findOne<Entity>(
         entityClass: any,
-        polarisCriteria: PolarisFindOneOptions<Entity> | any,
+        criteria:
+            | string
+            | string[]
+            | number
+            | number[]
+            | Date
+            | Date[]
+            | ObjectID
+            | ObjectID[]
+            | FindOneOptions<Entity>
+            | any,
         maybeOptions?: FindOneOptions<Entity>,
     ): Promise<Entity | undefined> {
-        const run = await runAndMeasureTime(async () => {
+        if (criteria instanceof PolarisFindOneOptions) {
             return super.findOne(
                 entityClass,
-                this.calculateCriteria<Entity>(entityClass, true, polarisCriteria),
+                this.calculateCriteria<Entity>(entityClass, true, criteria),
                 maybeOptions,
             );
-        });
-
-        // Todo:
-        // save elapsed time in the context
-
-        this.connection.logger.log(
-            'log',
-            'finished find one action successfully',
-            this.queryRunner,
-        );
-        return run.returnValue as any;
+        } else {
+            return super.findOne(entityClass, criteria, maybeOptions);
+        }
     }
 
     public async find<Entity>(
         entityClass: any,
-        polarisCriteria?: PolarisFindOneOptions<Entity> | any,
+        criteria?: PolarisFindManyOptions<Entity> | any,
     ): Promise<Entity[]> {
-        const run = await runAndMeasureTime(async () => {
+        if (criteria instanceof PolarisFindManyOptions) {
             return super.find(
                 entityClass,
-                this.calculateCriteria<Entity>(entityClass, true, polarisCriteria),
+                this.calculateCriteria<Entity>(entityClass, true, criteria),
             );
-        });
-        if (this.queryRunner) {
-            this.queryRunner.data.elapsedTime = run.elapsedTime;
+        } else {
+            return super.find(entityClass, criteria);
         }
-        this.connection.logger.log('log', 'finished find action successfully', this.queryRunner);
-        return run.returnValue as any;
     }
 
     public async count<Entity>(
         entityClass: any,
-        polarisCriteria?: PolarisFindOneOptions<Entity> | any,
+        criteria?: PolarisFindManyOptions<Entity> | any,
     ): Promise<number> {
-        const run = await runAndMeasureTime(async () => {
+        if (criteria instanceof PolarisFindManyOptions) {
             return super.count(
                 entityClass,
-                this.calculateCriteria<Entity>(entityClass, false, polarisCriteria),
+                this.calculateCriteria<Entity>(entityClass, false, criteria),
             );
-        });
-
-        // Todo: ElapsedTime
-
-        this.connection.logger.log('log', 'finished count action successfully', this.queryRunner);
-        return run.returnValue as any;
+        } else {
+            return super.count(entityClass, criteria);
+        }
     }
 
     public async save<Entity, T extends DeepPartial<Entity>>(
         targetOrEntity: any,
-        polarisSaveOptions?: PolarisSaveOptions<Entity, T> | any,
+        maybeEntityOrOptions?: PolarisSaveOptions<Entity, T> | any,
         maybeOptions?: any,
     ): Promise<T | T[]> {
-        const run = await runAndMeasureTime(async () => {
+        if (maybeEntityOrOptions instanceof PolarisSaveOptions) {
             if (targetOrEntity.toString().includes('CommonModel')) {
-                await this.wrapTransaction(async () => {
-                    await this.dataVersionHandler.updateDataVersion(polarisSaveOptions.context);
-                    await this.setInfoOfCommonModel(polarisSaveOptions.context, polarisSaveOptions.entities);
-
-                    return super.save(targetOrEntity, polarisSaveOptions.entities);
+                return this.wrapTransaction(async () => {
+                    await this.dataVersionHandler.updateDataVersion(maybeEntityOrOptions.context);
+                    await this.setInfoOfCommonModel(
+                        maybeEntityOrOptions.context,
+                        maybeEntityOrOptions.entities,
+                    );
+                    return super.save(targetOrEntity, maybeEntityOrOptions.entities, maybeOptions);
                 });
             } else {
-                return super.save(targetOrEntity, polarisSaveOptions.entities || polarisSaveOptions);
+                return super.save(
+                    targetOrEntity,
+                    maybeEntityOrOptions.entities || maybeEntityOrOptions,
+                    maybeOptions,
+                );
             }
-        });
-
-        // Todo: get elapsed
-
-        this.connection.logger.log('log', 'finished save action successfully', this.queryRunner);
-        return run.returnValue as any;
+        } else {
+            return super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
+        }
     }
 
     public async update<Entity>(
         target: any,
-        polarisCriteria: PolarisFindOneOptions<Entity> | any,
+        criteria: PolarisFindOneOptions<Entity> | any,
         partialEntity: any,
     ): Promise<UpdateResult> {
-        const run = await runAndMeasureTime(async () => {
-            await this.wrapTransaction(async () => {
-                await this.dataVersionHandler.updateDataVersion(polarisCriteria.context);
-                const globalDataVersion =
-                    polarisCriteria.context.returnedExtensions.globalDataVersion;
-                const upnOrRequestingSystemId = polarisCriteria.context.requestHeaders ?
-                    (polarisCriteria.context.requestHeaders.upn ||
-                      polarisCriteria.context.requestHeaders.requestingSystemId
-                    : '';
-                partialEntity = {
-                    ...partialEntity,
-                    dataVersion: globalDataVersion,
-                    lastUpdatedBy: upnOrRequestingSystemId
-                };
-                delete partialEntity.realityId;
-                return super.update(target, polarisCriteria.criteria, partialEntity);
-            });
+        return this.wrapTransaction(async () => {
+            await this.dataVersionHandler.updateDataVersion(criteria.context);
+            const globalDataVersion = criteria.context.returnedExtensions.globalDataVersion;
+            const upnOrRequestingSystemId = criteria.context.requestHeaders
+                ? criteria.context.requestHeaders.upn ||
+                  criteria.context.requestHeaders.requestingSystemId
+                : '';
+            partialEntity = {
+                ...partialEntity,
+                dataVersion: globalDataVersion,
+                lastUpdatedBy: upnOrRequestingSystemId,
+            };
+            delete partialEntity.realityId;
+            return super.update(target, criteria.criteria, partialEntity);
         });
-
-        // Todo Elapsed
-        this.connection.logger.log('log', 'finished update action successfully', this.queryRunner);
-        return run.returnValue as any;
     }
 
     private async wrapTransaction(action: any) {
@@ -182,25 +178,27 @@ export class PolarisEntityManager extends EntityManager {
             }
             return result;
         } catch (err) {
-            if (this.queryRunner) {
-                this.queryRunner.data.logError = true;
-            }
-            this.connection.logger.log('log', err.message, this.queryRunner);
+            this.connection.logger.log('log', err.message);
             await runner.rollbackTransaction();
         }
     }
 
-    private async setInfoOfCommonModel(context: PolarisGraphQLContext, maybeEntityOrOptions?: any) {
+    private async setInfoOfCommonModel(
+        context: PolarisGraphQLContext,
+        maybeEntityOrOptions?: any,
+    ) {
         if (maybeEntityOrOptions instanceof Array) {
             for (const t of maybeEntityOrOptions) {
                 t.dataVersion = context.returnedExtensions.globalDataVersion;
                 t.realityId = context.requestHeaders.realityId;
-                t.createdBy = context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
+                t.createdBy =
+                    context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
             }
         } else {
             maybeEntityOrOptions.dataVersion = context.returnedExtensions.globalDataVersion;
             maybeEntityOrOptions.realityId = context.requestHeaders.realityId;
-            maybeEntityOrOptions.createdBy = context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
+            maybeEntityOrOptions.createdBy =
+                context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
         }
     }
 

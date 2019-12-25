@@ -1,17 +1,15 @@
 import { PolarisGraphQLContext } from '@enigmatis/polaris-common';
-import { FindOneOptions, ObjectID } from 'typeorm';
+import { FindOneOptions } from 'typeorm';
 
-export interface PolarisFindOneOptions<Entity> {
-    criteria:
-        | string
-        | string[]
-        | number
-        | number[]
-        | Date
-        | Date[]
-        | ObjectID
-        | ObjectID[]
-        | FindOneOptions<Entity>
-        | any;
-    context: PolarisGraphQLContext;
+export class PolarisFindOneOptions<Entity> {
+    public criteria: string | string[] | FindOneOptions<Entity> | any;
+    public context: PolarisGraphQLContext;
+
+    constructor(
+        criteria: string | string[] | FindOneOptions<Entity> | any,
+        context: PolarisGraphQLContext,
+    ) {
+        this.criteria = criteria;
+        this.context = context;
+    }
 }

@@ -24,7 +24,15 @@ export class FindHandler {
         const headers: PolarisRequestHeaders =
             (polarisOptions && polarisOptions.context && polarisOptions.context.requestHeaders) ||
             {};
-        const polarisCriteria = (polarisOptions && polarisOptions.criteria) || {};
+
+        let polarisCriteria: any = {};
+        if (polarisOptions && typeof polarisOptions.criteria === 'string') {
+            polarisCriteria = { where: { id: polarisOptions.criteria } };
+        } else if (polarisOptions && polarisCriteria instanceof Array) {
+            polarisCriteria = { where: { id: In(polarisOptions.criteria) } };
+        } else {
+            polarisCriteria = (polarisOptions && polarisOptions.criteria) || {};
+        }
 
         polarisCriteria.where = { ...polarisCriteria.where };
         if (polarisCriteria.where.deleted === undefined) {
