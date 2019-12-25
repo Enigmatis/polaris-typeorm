@@ -192,7 +192,7 @@ describe('entity manager tests', () => {
             const bookFail = new Book('fail book');
             try {
                 await connection.manager.save(Book, bookFail);
-            }catch(e){};
+            }catch(e){}
             const dv = await connection.manager.findOne(DataVersion);
             const bookSaved = await connection.manager.findOne(Book, new PolarisFindOneOptions({
                 where: {title: bookFail.title},
