@@ -11,11 +11,6 @@ const realityIdCriteria = (includeLinkedOper: boolean, headers: PolarisRequestHe
         : headers.realityId || 0;
 
 export class FindHandler {
-    private manager: EntityManager;
-
-    constructor(manager: EntityManager) {
-        this.manager = manager;
-    }
 
     public findConditions<Entity>(
         includeLinkedOper: boolean,

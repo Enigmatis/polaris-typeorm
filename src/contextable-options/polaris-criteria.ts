@@ -4,7 +4,8 @@ export class PolarisCriteria {
     public criteria: string | string[] | any;
     public context: PolarisGraphQLContext;
 
-    constructor(criteria: string | string[] | any) {
+    constructor(criteria: string | string[] | any, context: PolarisGraphQLContext) {
         this.criteria = criteria;
+        this.context = context;
     }
 }

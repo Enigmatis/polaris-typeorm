@@ -24,7 +24,7 @@ export class PolarisEntityManager extends EntityManager {
     constructor(connection: Connection) {
         super(connection, connection.createQueryRunner());
         this.dataVersionHandler = new DataVersionHandler(this);
-        this.findHandler = new FindHandler(this);
+        this.findHandler = new FindHandler();
         this.softDeleteHandler = new SoftDeleteHandler(this);
     }
 
@@ -183,20 +183,19 @@ export class PolarisEntityManager extends EntityManager {
         }
     }
 
-    private async setInfoOfCommonModel(
-        context: PolarisGraphQLContext,
-        maybeEntityOrOptions?: any,
-    ) {
+    private async setInfoOfCommonModel(context: PolarisGraphQLContext, maybeEntityOrOptions?: any) {
+        const headers =  context && context.requestHeaders;
+        const globalDataVersion =  context && context.requestHeaders;
         if (maybeEntityOrOptions instanceof Array) {
             for (const t of maybeEntityOrOptions) {
                 t.dataVersion = context.returnedExtensions.globalDataVersion;
-                t.realityId = context.requestHeaders.realityId;
+                t.realityId = context.requestHeaders.realityId || 0;
                 t.createdBy =
                     context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
             }
         } else {
             maybeEntityOrOptions.dataVersion = context.returnedExtensions.globalDataVersion;
-            maybeEntityOrOptions.realityId = context.requestHeaders.realityId;
+            maybeEntityOrOptions.realityId = context.requestHeaders.realityId || 0;
             maybeEntityOrOptions.createdBy =
                 context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
         }
