@@ -1,4 +1,4 @@
-import { PolarisGraphQLContext, runAndMeasureTime } from '@enigmatis/polaris-common';
+import { PolarisGraphQLContext} from '@enigmatis/polaris-common';
 import {
     Connection,
     DeepPartial,
@@ -53,7 +53,7 @@ export class PolarisEntityManager extends EntityManager {
                 }
                 return this.softDeleteHandler.softDeleteRecursive(
                     targetOrEntity,
-                    criteria.criteria,
+                    criteria,
                 );
             });
         } else {
@@ -124,7 +124,7 @@ export class PolarisEntityManager extends EntityManager {
             if (targetOrEntity.toString().includes('CommonModel')) {
                 return this.wrapTransaction(async () => {
                     await this.dataVersionHandler.updateDataVersion(maybeEntityOrOptions.context);
-                    await this.setInfoOfCommonModel(
+                    await PolarisEntityManager.setInfoOfCommonModel(
                         maybeEntityOrOptions.context,
                         maybeEntityOrOptions.entities,
                     );
@@ -183,9 +183,7 @@ export class PolarisEntityManager extends EntityManager {
         }
     }
 
-    private async setInfoOfCommonModel(context: PolarisGraphQLContext, maybeEntityOrOptions?: any) {
-        const headers =  context && context.requestHeaders;
-        const globalDataVersion =  context && context.requestHeaders;
+    private static async setInfoOfCommonModel(context: PolarisGraphQLContext, maybeEntityOrOptions?: any) {
         if (maybeEntityOrOptions instanceof Array) {
             for (const t of maybeEntityOrOptions) {
                 t.dataVersion = context.returnedExtensions.globalDataVersion;

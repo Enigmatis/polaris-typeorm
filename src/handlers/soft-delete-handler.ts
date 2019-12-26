@@ -1,5 +1,6 @@
-import { EntityManager, In, ObjectID, UpdateResult } from 'typeorm';
-import { CommonModel } from '..';
+import {EntityManager, In, UpdateResult} from 'typeorm';
+import {CommonModel} from '..';
+import {PolarisCriteria} from "../contextable-options/polaris-criteria";
 
 export class SoftDeleteHandler {
     private manager: EntityManager;
@@ -10,11 +11,14 @@ export class SoftDeleteHandler {
 
     public async softDeleteRecursive(
         targetOrEntity: any,
-        criteria: string | string[] | any,
+        polarisCriteria: PolarisCriteria,
     ): Promise<UpdateResult> {
-        const softDeletedEntities = await this.updateWithReturningIds(targetOrEntity, criteria, {
+        const softDeletedEntities = await this.updateWithReturningIds(targetOrEntity, polarisCriteria.criteria, {
             deleted: true,
-            // Todo: lastUpdatedBy & BY WHOM
+            lastUpdatedBy: polarisCriteria &&
+                polarisCriteria.context &&
+                polarisCriteria.context.requestHeaders &&
+                (polarisCriteria.context.requestHeaders.upn || polarisCriteria.context.requestHeaders.requestingSystemName),
         });
         if (softDeletedEntities.affected === 0) {
             return softDeletedEntities;
@@ -38,7 +42,7 @@ export class SoftDeleteHandler {
                     x[relation.propertyName] = In(
                         softDeletedEntities.raw.map((row: { id: string }) => row.id),
                     );
-                    await this.softDeleteRecursive(relationMetadata.targetName, x);
+                    await this.softDeleteRecursive(relationMetadata.targetName, new PolarisCriteria(x, polarisCriteria.context));
                 }
             }
         }
