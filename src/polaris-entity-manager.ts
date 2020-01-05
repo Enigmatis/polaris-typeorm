@@ -1,13 +1,5 @@
-import { PolarisGraphQLContext} from '@enigmatis/polaris-common';
-import {
-    Connection,
-    DeepPartial,
-    DeleteResult,
-    EntityManager,
-    FindOneOptions,
-    ObjectID,
-    UpdateResult,
-} from 'typeorm';
+import { PolarisGraphQLContext } from '@enigmatis/polaris-common';
+import { Connection, DeepPartial, DeleteResult, EntityManager, FindOneOptions, ObjectID, UpdateResult } from 'typeorm';
 import { PolarisCriteria } from './contextable-options/polaris-criteria';
 import { PolarisFindManyOptions } from './contextable-options/polaris-find-many-options';
 import { PolarisFindOneOptions } from './contextable-options/polaris-find-one-options';
@@ -17,6 +9,32 @@ import { FindHandler } from './handlers/find-handler';
 import { SoftDeleteHandler } from './handlers/soft-delete-handler';
 
 export class PolarisEntityManager extends EntityManager {
+    private static async setInfoOfCommonModel(
+        context: PolarisGraphQLContext,
+        maybeEntityOrOptions?: any,
+    ) {
+        if (maybeEntityOrOptions instanceof Array) {
+            for (const t of maybeEntityOrOptions) {
+                t.dataVersion = context.returnedExtensions.globalDataVersion;
+                t.realityId = context.requestHeaders.realityId || 0;
+                PolarisEntityManager.setUpnOfEntity(t, context);
+            }
+        } else {
+            maybeEntityOrOptions.dataVersion = context.returnedExtensions.globalDataVersion;
+            maybeEntityOrOptions.realityId = context.requestHeaders.realityId || 0;
+            PolarisEntityManager.setUpnOfEntity(maybeEntityOrOptions, context);
+        }
+    }
+
+    private static setUpnOfEntity(entity: any, context: any) {
+        if (entity.creationTime !== undefined) {
+            entity.createdBy =
+                context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
+        } else {
+            entity.lastUpdatedBy =
+                context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
+        }
+    }
     public dataVersionHandler: DataVersionHandler;
     public findHandler: FindHandler;
     public softDeleteHandler: SoftDeleteHandler;
@@ -51,10 +69,7 @@ export class PolarisEntityManager extends EntityManager {
                 ) {
                     return super.delete(targetOrEntity, criteria.criteria);
                 }
-                return this.softDeleteHandler.softDeleteRecursive(
-                    targetOrEntity,
-                    criteria,
-                );
+                return this.softDeleteHandler.softDeleteRecursive(targetOrEntity, criteria);
             });
         } else {
             return super.delete(targetOrEntity, criteria);
@@ -120,23 +135,18 @@ export class PolarisEntityManager extends EntityManager {
         maybeEntityOrOptions?: PolarisSaveOptions<Entity, T> | any,
         maybeOptions?: any,
     ): Promise<T | T[]> {
-        if (maybeEntityOrOptions instanceof PolarisSaveOptions) {
-            if (targetOrEntity.toString().includes('CommonModel')) {
-                return this.wrapTransaction(async () => {
-                    await this.dataVersionHandler.updateDataVersion(maybeEntityOrOptions.context);
-                    await PolarisEntityManager.setInfoOfCommonModel(
-                        maybeEntityOrOptions.context,
-                        maybeEntityOrOptions.entities,
-                    );
-                    return super.save(targetOrEntity, maybeEntityOrOptions.entities, maybeOptions);
-                });
-            } else {
-                return super.save(
-                    targetOrEntity,
-                    maybeEntityOrOptions.entities || maybeEntityOrOptions,
-                    maybeOptions,
+        if (
+            maybeEntityOrOptions instanceof PolarisSaveOptions &&
+            targetOrEntity.toString().includes('CommonModel')
+        ) {
+            return this.wrapTransaction(async () => {
+                await this.dataVersionHandler.updateDataVersion(maybeEntityOrOptions.context);
+                await PolarisEntityManager.setInfoOfCommonModel(
+                    maybeEntityOrOptions.context,
+                    maybeEntityOrOptions.entities,
                 );
-            }
+                return super.save(targetOrEntity, maybeEntityOrOptions.entities, maybeOptions);
+            });
         } else {
             return super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
         }
@@ -180,22 +190,6 @@ export class PolarisEntityManager extends EntityManager {
         } catch (err) {
             this.connection.logger.log('log', err.message);
             await runner.rollbackTransaction();
-        }
-    }
-
-    private static async setInfoOfCommonModel(context: PolarisGraphQLContext, maybeEntityOrOptions?: any) {
-        if (maybeEntityOrOptions instanceof Array) {
-            for (const t of maybeEntityOrOptions) {
-                t.dataVersion = context.returnedExtensions.globalDataVersion;
-                t.realityId = context.requestHeaders.realityId || 0;
-                t.createdBy =
-                    context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
-            }
-        } else {
-            maybeEntityOrOptions.dataVersion = context.returnedExtensions.globalDataVersion;
-            maybeEntityOrOptions.realityId = context.requestHeaders.realityId || 0;
-            maybeEntityOrOptions.createdBy =
-                context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
         }
     }
 
