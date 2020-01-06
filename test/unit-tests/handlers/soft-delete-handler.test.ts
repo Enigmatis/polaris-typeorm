@@ -1,8 +1,8 @@
 import { CommonModel } from '../../../src';
+import { PolarisCriteria } from '../../../src/contextable-options/polaris-criteria';
 import { SoftDeleteHandler } from '../../../src/handlers/soft-delete-handler';
 import { Book } from '../../dal/book';
 import { Library } from '../../dal/library';
-import {PolarisCriteria} from "../../../src/contextable-options/polaris-criteria";
 
 let connection: any;
 let metadata: any;

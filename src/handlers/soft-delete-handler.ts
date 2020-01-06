@@ -1,6 +1,6 @@
-import {EntityManager, In, UpdateResult} from 'typeorm';
-import {CommonModel} from '..';
-import {PolarisCriteria} from "../contextable-options/polaris-criteria";
+import { EntityManager, In, UpdateResult } from 'typeorm';
+import { CommonModel } from '..';
+import { PolarisCriteria } from '../contextable-options/polaris-criteria';
 
 export class SoftDeleteHandler {
     private manager: EntityManager;
@@ -13,13 +13,19 @@ export class SoftDeleteHandler {
         targetOrEntity: any,
         polarisCriteria: PolarisCriteria,
     ): Promise<UpdateResult> {
-        const softDeletedEntities = await this.updateWithReturningIds(targetOrEntity, polarisCriteria.criteria, {
-            deleted: true,
-            lastUpdatedBy: polarisCriteria &&
-                polarisCriteria.context &&
-                polarisCriteria.context.requestHeaders &&
-                (polarisCriteria.context.requestHeaders.upn || polarisCriteria.context.requestHeaders.requestingSystemName),
-        });
+        const softDeletedEntities = await this.updateWithReturningIds(
+            targetOrEntity,
+            polarisCriteria.criteria,
+            {
+                deleted: true,
+                lastUpdatedBy:
+                    polarisCriteria &&
+                    polarisCriteria.context &&
+                    polarisCriteria.context.requestHeaders &&
+                    (polarisCriteria.context.requestHeaders.upn ||
+                        polarisCriteria.context.requestHeaders.requestingSystemName),
+            },
+        );
         if (softDeletedEntities.affected === 0) {
             return softDeletedEntities;
         }
@@ -42,7 +48,10 @@ export class SoftDeleteHandler {
                     x[relation.propertyName] = In(
                         softDeletedEntities.raw.map((row: { id: string }) => row.id),
                     );
-                    await this.softDeleteRecursive(relationMetadata.targetName, new PolarisCriteria(x, polarisCriteria.context));
+                    await this.softDeleteRecursive(
+                        relationMetadata.targetName,
+                        new PolarisCriteria(x, polarisCriteria.context),
+                    );
                 }
             }
         }

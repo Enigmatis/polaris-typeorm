@@ -1,5 +1,5 @@
 import { PolarisRequestHeaders } from '@enigmatis/polaris-common';
-import { EntityManager, In, MoreThan } from 'typeorm';
+import { In, MoreThan } from 'typeorm';
 import { PolarisFindOneOptions } from '..';
 import { PolarisFindManyOptions } from '../contextable-options/polaris-find-many-options';
 
@@ -11,7 +11,6 @@ const realityIdCriteria = (includeLinkedOper: boolean, headers: PolarisRequestHe
         : headers.realityId || 0;
 
 export class FindHandler {
-
     public findConditions<Entity>(
         includeLinkedOper: boolean,
         polarisOptions?: PolarisFindManyOptions<Entity> | PolarisFindOneOptions<Entity>,

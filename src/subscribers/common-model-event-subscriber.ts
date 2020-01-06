@@ -1,12 +1,5 @@
-import {
-    runAndMeasureTime,
-} from '@enigmatis/polaris-common';
-import {
-    EntitySubscriberInterface,
-    EventSubscriber,
-    InsertEvent,
-    UpdateEvent,
-} from 'typeorm';
+import { runAndMeasureTime } from '@enigmatis/polaris-common';
+import { EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent } from 'typeorm';
 import { CommonModel } from '..';
 
 @EventSubscriber()

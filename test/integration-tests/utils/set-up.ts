@@ -1,13 +1,13 @@
-import {PolarisExtensions, PolarisGraphQLContext, PolarisRequestHeaders} from '@enigmatis/polaris-common';
-import {PolarisLogger} from '@enigmatis/polaris-logs';
-import {Connection} from 'typeorm';
-import {createPolarisConnection, PolarisSaveOptions} from '../../../src';
-import {Author} from '../../dal/author';
-import {Book} from '../../dal/book';
-import {Library} from '../../dal/library';
-import {Profile} from '../../dal/profile';
-import {User} from '../../dal/user';
-import {applicationLogProperties, connectionOptions, loggerConfig} from './test-properties';
+import { PolarisExtensions, PolarisGraphQLContext, PolarisRequestHeaders } from '@enigmatis/polaris-common';
+import { PolarisLogger } from '@enigmatis/polaris-logs';
+import { Connection } from 'typeorm';
+import { createPolarisConnection, PolarisSaveOptions } from '../../../src';
+import { Author } from '../../dal/author';
+import { Book } from '../../dal/book';
+import { Library } from '../../dal/library';
+import { Profile } from '../../dal/profile';
+import { User } from '../../dal/user';
+import { applicationLogProperties, connectionOptions, loggerConfig } from './test-properties';
 
 export const setUpTestConnection = async (): Promise<Connection> => {
     const polarisGraphQLLogger = await new PolarisLogger(loggerConfig, applicationLogProperties);
@@ -33,7 +33,7 @@ export const harryPotter = 'Harry Potter and the Chamber of Secrets';
 export const cascadeBook = 'Cascade Book';
 
 export const initDb = async (connection: Connection) => {
-    const context = {requestHeaders: {realityId: 0}} as any;
+    const context = { requestHeaders: { realityId: 0 } } as any;
     const hpBook = new Book(harryPotter);
     const cbBook = new Book(cascadeBook);
     const rowlingAuthor = new Author(rowling, [hpBook]);
@@ -41,9 +41,15 @@ export const initDb = async (connection: Connection) => {
     cbBook.author = cascadeAuthor;
     await connection.manager.save(Profile, new PolarisSaveOptions(profile, context) as any);
     await connection.manager.save(User, new PolarisSaveOptions(user, context) as any);
-    await connection.manager.save(Author, new PolarisSaveOptions([rowlingAuthor, cascadeAuthor], context) as any);
+    await connection.manager.save(Author, new PolarisSaveOptions(
+        [rowlingAuthor, cascadeAuthor],
+        context,
+    ) as any);
     await connection.manager.save(Book, new PolarisSaveOptions([hpBook, cbBook], context) as any);
-    await connection.manager.save(Library, new PolarisSaveOptions(new Library('public', [cbBook]), context) as any);
+    await connection.manager.save(Library, new PolarisSaveOptions(
+        new Library('public', [cbBook]),
+        context,
+    ) as any);
 };
 
 export function setHeaders(connection: Connection, headers?: PolarisRequestHeaders): void {
@@ -52,10 +58,13 @@ export function setHeaders(connection: Connection, headers?: PolarisRequestHeade
     }
 }
 
-export function generateContext(headers?: PolarisRequestHeaders, extensions?: PolarisExtensions): PolarisGraphQLContext {
+export function generateContext(
+    headers?: PolarisRequestHeaders,
+    extensions?: PolarisExtensions,
+): PolarisGraphQLContext {
     return {
         requestHeaders: headers || {},
-        returnedExtensions: extensions || {}
+        returnedExtensions: extensions || {},
     } as PolarisGraphQLContext;
 }
 

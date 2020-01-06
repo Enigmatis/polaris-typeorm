@@ -1,11 +1,4 @@
-import {
-    Connection,
-    EntityManager,
-    EntityMetadata,
-    InsertEvent,
-    QueryRunner,
-    UpdateEvent,
-} from 'typeorm';
+import { Connection, EntityManager, EntityMetadata, InsertEvent, QueryRunner, UpdateEvent } from 'typeorm';
 // tslint:disable-next-line:no-submodule-imports
 import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 // tslint:disable-next-line:no-submodule-imports
@@ -85,7 +78,7 @@ describe('common model event subscriber tests', () => {
 
 function getConnection(): any {
     return {
-        manager:{connection: {}},
+        manager: { connection: {} },
         logger: { log: jest.fn() },
     } as any;
 }
