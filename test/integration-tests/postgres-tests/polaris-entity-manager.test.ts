@@ -257,10 +257,7 @@ describe('entity manager tests', () => {
 
         it('fail save action, data version not progressing', async () => {
             const bookFail = new Book('fail book');
-            try {
-                await connection.manager.save(Book, bookFail);
-                // tslint:disable-next-line:no-empty
-            } catch (e) {}
+            await connection.manager.save(Book, bookFail);
             const dv = await connection.manager.findOne(DataVersion);
             const bookSaved = await connection.manager.findOne(
                 Book,
