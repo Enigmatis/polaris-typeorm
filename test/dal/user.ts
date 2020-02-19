@@ -10,8 +10,8 @@ export class User extends CommonModel {
     @OneToOne(() => Profile)
     @JoinColumn()
     public profile: Profile;
-    constructor(name?: string, profile?: Profile) {
-        super();
+    constructor(id: string, name?: string, profile?: Profile) {
+        super(id);
         if (name) {
             this.name = name;
         }

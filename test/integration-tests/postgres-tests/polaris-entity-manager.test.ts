@@ -1,7 +1,11 @@
 import { Connection } from 'typeorm';
-import { DataVersion, PolarisFindOneOptions, PolarisSaveOptions } from '../../../src';
-import { PolarisCriteria } from '../../../src/contextable-options/polaris-criteria';
-import { PolarisFindManyOptions } from '../../../src/contextable-options/polaris-find-many-options';
+import {
+    DataVersion,
+    PolarisCriteria,
+    PolarisFindManyOptions,
+    PolarisFindOneOptions,
+    PolarisSaveOptions,
+} from '../../../src';
 import { getAllEntitiesIncludingDeleted } from '../../../src/handlers/find-handler';
 import { Author } from '../../dal/author';
 import { Book } from '../../dal/book';
@@ -10,11 +14,11 @@ import { Profile } from '../../dal/profile';
 import { User } from '../../dal/user';
 import {
     cascadeBook,
+    femaleProfile,
     generateContext,
     harryPotter,
     initDb,
     mrCascade,
-    profile,
     rowling,
     setHeaders,
     setUpTestConnection,
@@ -28,7 +32,7 @@ export const bookWithCascadeCriteria = { where: { title: cascadeBook } };
 export const authorWithCascadeCriteria = { where: { name: mrCascade } };
 
 export const userCriteria = { where: { name: user.name } };
-const profileCriteria = { where: { gender: profile.gender } };
+const profileCriteria = { where: { gender: femaleProfile.gender } };
 
 let connection: Connection;
 
@@ -141,105 +145,111 @@ describe('entity manager tests', () => {
                 ? expect(authorWithCascade.getDeleted()).toBeTruthy()
                 : expect(bookWithCascade).toBeDefined();
         });
-    });
-    it('delete linked entity, should not return deleted entities(first level), get entity and its linked entity', async () => {
-        await connection.manager.delete(
-            Profile,
-            new PolarisCriteria(profileCriteria, generateContext()),
-        );
-        const userEntity: User | undefined = await connection.manager.findOne(
-            User,
-            new PolarisFindOneOptions(
-                {
-                    ...userCriteria,
-                    relations: ['profile'],
-                },
-                generateContext(),
-            ) as any,
-        );
 
-        userEntity ? expect(userEntity.getDeleted()).toBeFalsy() : expect(userEntity).toBeDefined();
-        if (userEntity) {
-            userEntity.profile
-                ? expect(userEntity.profile.getDeleted()).toBeTruthy()
-                : expect(userEntity.profile).toBeDefined();
-        }
-    });
+        it('delete linked entity, should not return deleted entities(first level), get entity and its linked entity', async () => {
+            await connection.manager.delete(
+                Profile,
+                new PolarisCriteria(profileCriteria, generateContext()),
+            );
+            const userEntity: User | undefined = await connection.manager.findOne(
+                User,
+                new PolarisFindOneOptions(
+                    {
+                        ...userCriteria,
+                        relations: ['profile'],
+                    },
+                    generateContext(),
+                ) as any,
+            );
 
-    // checks default setting
-    it('delete entity, should not return deleted entities, doesnt return deleted entity', async () => {
-        await connection.manager.delete(
-            Book,
-            new PolarisCriteria(testBookCriteria, generateContext()),
-        );
-        const book: Book | undefined = await connection.manager.findOne(
-            Book,
-            new PolarisFindOneOptions(testBookCriteria, generateContext()) as any,
-        );
-        expect(book).toBeUndefined();
-    });
-
-    // checks soft delete allow false
-    it('delete entity, soft delete allow is false and return deleted entities true, doesnt return deleted entity', async () => {
-        Object.assign(connection.options, {
-            extra: { config: { allowSoftDelete: false } },
+            userEntity
+                ? expect(userEntity.getDeleted()).toBeFalsy()
+                : expect(userEntity).toBeDefined();
+            if (userEntity) {
+                userEntity.profile
+                    ? expect(userEntity.profile.getDeleted()).toBeTruthy()
+                    : expect(userEntity.profile).toBeDefined();
+            }
         });
-        await connection.manager.delete(
-            Author,
-            new PolarisCriteria(testAuthorCriteria, generateContext()),
-        );
-        const author: Author | undefined = await connection.manager.findOne(
-            Author,
-            new PolarisFindOneOptions(
-                {
-                    where: { ...testAuthorCriteria.where, ...getAllEntitiesIncludingDeleted.where },
-                },
-                generateContext(),
-            ) as any,
-        );
-        expect(author).toBeUndefined();
-    });
 
-    // checks soft delete allow false with cascade
-    it(
-        'delete entity, soft delete allow is false and return deleted entities true and cascade is true,' +
-            ' doesnt return deleted entity and its linked entity',
-        async () => {
+        // checks default setting
+        it('delete entity, should not return deleted entities, doesnt return deleted entity', async () => {
+            await connection.manager.delete(
+                Book,
+                new PolarisCriteria(testBookCriteria, generateContext()),
+            );
+            const book: Book | undefined = await connection.manager.findOne(
+                Book,
+                new PolarisFindOneOptions(testBookCriteria, generateContext()) as any,
+            );
+            expect(book).toBeUndefined();
+        });
+
+        // checks soft delete allow false
+        it('delete entity, soft delete allow is false and return deleted entities true, doesnt return deleted entity', async () => {
             Object.assign(connection.options, {
                 extra: { config: { allowSoftDelete: false } },
             });
             await connection.manager.delete(
                 Author,
-                new PolarisCriteria(authorWithCascadeCriteria, generateContext()),
+                new PolarisCriteria(testAuthorCriteria, generateContext()),
             );
-            const bookWithCascade: Book | undefined = await connection.manager.findOne(
-                Book,
-                new PolarisFindOneOptions(
-                    {
-                        where: {
-                            ...bookWithCascadeCriteria.where,
-                            ...getAllEntitiesIncludingDeleted.where,
-                        },
-                    },
-                    generateContext(),
-                ) as any,
-            );
-            const authorWithCascade: Author | undefined = await connection.manager.findOne(
+            const author: Author | undefined = await connection.manager.findOne(
                 Author,
                 new PolarisFindOneOptions(
                     {
                         where: {
-                            ...authorWithCascadeCriteria.where,
+                            ...testAuthorCriteria.where,
                             ...getAllEntitiesIncludingDeleted.where,
                         },
                     },
                     generateContext(),
                 ) as any,
             );
-            expect(bookWithCascade).toBeUndefined();
-            expect(authorWithCascade).toBeUndefined();
-        },
-    );
+            expect(author).toBeUndefined();
+        });
+
+        // checks soft delete allow false with cascade
+        it(
+            'delete entity, soft delete allow is false and return deleted entities true and cascade is true,' +
+                ' doesnt return deleted entity and its linked entity',
+            async () => {
+                Object.assign(connection.options, {
+                    extra: { config: { allowSoftDelete: false } },
+                });
+                await connection.manager.delete(
+                    Author,
+                    new PolarisCriteria(authorWithCascadeCriteria, generateContext()),
+                );
+                const bookWithCascade: Book | undefined = await connection.manager.findOne(
+                    Book,
+                    new PolarisFindOneOptions(
+                        {
+                            where: {
+                                ...bookWithCascadeCriteria.where,
+                                ...getAllEntitiesIncludingDeleted.where,
+                            },
+                        },
+                        generateContext(),
+                    ) as any,
+                );
+                const authorWithCascade: Author | undefined = await connection.manager.findOne(
+                    Author,
+                    new PolarisFindOneOptions(
+                        {
+                            where: {
+                                ...authorWithCascadeCriteria.where,
+                                ...getAllEntitiesIncludingDeleted.where,
+                            },
+                        },
+                        generateContext(),
+                    ) as any,
+                );
+                expect(bookWithCascade).toBeUndefined();
+                expect(authorWithCascade).toBeUndefined();
+            },
+        );
+    });
 
     describe('data version tests', () => {
         it('books are created with data version, get all book for data version 0', async () => {
@@ -256,7 +266,7 @@ describe('entity manager tests', () => {
         });
 
         it('fail save action, data version not progressing', async () => {
-            const bookFail = new Book('fail book');
+            const bookFail = new Book('9898', 'fail book');
             await connection.manager.save(Book, bookFail);
             const dv = await connection.manager.findOne(DataVersion);
             const bookSaved = await connection.manager.findOne(
@@ -275,7 +285,7 @@ describe('entity manager tests', () => {
 
     describe('reality tests', () => {
         it('reality id is supplied in headers', async () => {
-            const bookReality1: any = new Book('Jurassic Park');
+            const bookReality1: any = new Book('6867', 'Jurassic Park');
             bookReality1.realityId = 1;
             await connection.manager.save(
                 Book,
@@ -300,7 +310,7 @@ describe('entity manager tests', () => {
         });
 
         it('save existing entity with different reality id, fail saving', async () => {
-            const book: any = new Book('my book');
+            const book: any = new Book('4432', 'my book');
             await connection
                 .getRepository(Book)
                 .save(new PolarisSaveOptions(book, generateContext()) as any);
@@ -315,8 +325,9 @@ describe('entity manager tests', () => {
             }
         });
     });
+
     it('find one with id', async () => {
-        const book = new Book('my book');
+        const book = new Book('1345', 'my book');
         await connection
             .getRepository(Book)
             .save(new PolarisSaveOptions(book, generateContext()) as any);
@@ -330,6 +341,24 @@ describe('entity manager tests', () => {
             ) as any,
         );
         expect(book).toEqual(bookFound);
+    });
+
+    it('find one with provided id', async () => {
+        const profileId = 'foo';
+        const profile = new Profile(profileId, 'some gender');
+        await connection
+            .getRepository(Profile)
+            .save(new PolarisSaveOptions(profile, generateContext()) as any);
+        const profileFound: Profile | undefined = await connection.manager.findOne(
+            Profile,
+            new PolarisFindOneOptions(
+                {
+                    where: { id: profileId },
+                },
+                generateContext(),
+            ) as any,
+        );
+        expect(profile).toEqual(profileFound);
     });
 
     it('count', async () => {

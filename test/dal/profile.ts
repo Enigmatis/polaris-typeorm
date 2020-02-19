@@ -5,8 +5,8 @@ import { CommonModel } from '../../src';
 export class Profile extends CommonModel {
     @Column()
     public gender: string;
-    constructor(gender?: string) {
-        super();
+    constructor(id: string, gender?: string) {
+        super(id);
         if (gender) {
             this.gender = gender;
         }

@@ -21,8 +21,8 @@ export class Book extends CommonModel {
         { onDelete: 'CASCADE' },
     )
     public library: Library;
-    constructor(title?: string, author?: Author) {
-        super();
+    constructor(id: string, title?: string, author?: Author) {
+        super(id);
         if (title) {
             this.title = title;
         }

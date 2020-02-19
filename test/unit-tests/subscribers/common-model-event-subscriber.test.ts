@@ -19,7 +19,7 @@ let commonModelEventSubscriber: CommonModelEventSubscriber;
 
 describe('common model event subscriber tests', () => {
     beforeEach(async () => {
-        bookEntity = new Book();
+        bookEntity = new Book('1');
         commonModelEventSubscriber = new CommonModelEventSubscriber();
     });
     describe('beforeInsert tests', () => {

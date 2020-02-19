@@ -29,8 +29,9 @@ export const setUpTestConnection = async (): Promise<Connection> => {
     return connection;
 };
 
-export const profile = new Profile('female');
-export const user = new User('chen', profile);
+export const femaleProfile = new Profile('123', 'female');
+export const maleProfile = new Profile('456', 'male');
+export const user = new User('111', 'chen', femaleProfile);
 export const rowling = 'J.K Rowling';
 export const mrCascade = 'Mr Cascade';
 export const harryPotter = 'Harry Potter and the Chamber of Secrets';
@@ -38,12 +39,15 @@ export const cascadeBook = 'Cascade Book';
 
 export const initDb = async (connection: Connection) => {
     const context = { requestHeaders: { realityId: 0 } } as any;
-    const hpBook = new Book(harryPotter);
-    const cbBook = new Book(cascadeBook);
-    const rowlingAuthor = new Author(rowling, [hpBook]);
-    const cascadeAuthor = new Author(mrCascade, [cbBook]);
+    const hpBook = new Book('3453', harryPotter);
+    const cbBook = new Book('3211', cascadeBook);
+    const rowlingAuthor = new Author('333', rowling, [hpBook]);
+    const cascadeAuthor = new Author('444', mrCascade, [cbBook]);
     cbBook.author = cascadeAuthor;
-    await connection.manager.save(Profile, new PolarisSaveOptions(profile, context) as any);
+    await connection.manager.save(
+        Profile,
+        new PolarisSaveOptions([femaleProfile, maleProfile], context) as any,
+    );
     await connection.manager.save(User, new PolarisSaveOptions(user, context) as any);
     await connection.manager.save(
         Author,

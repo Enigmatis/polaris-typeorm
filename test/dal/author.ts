@@ -19,8 +19,8 @@ export class Author extends CommonModel {
         libraries => libraries.author,
     )
     public libraries: Library[];
-    constructor(name?: string, books?: Book[]) {
-        super();
+    constructor(id: string, name?: string, books?: Book[]) {
+        super(id);
         if (name) {
             this.name = name;
         }
