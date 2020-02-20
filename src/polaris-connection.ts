@@ -1,0 +1,23 @@
+import { Connection, ObjectType } from 'typeorm';
+import { EntitySchema } from '../';
+import { PolarisEntityManager } from './polaris-entity-manager';
+import { PolarisRepository } from './polaris-repository';
+
+/**
+ * Connection is a single database ORM connection to a specific database.
+ * Its not required to be a database connection, depend on database type it can create connection pool.
+ * You can have multiple connections to multiple databases in your application.
+ */
+export class PolarisConnection extends Connection {
+    // @ts-ignore
+    public manager: PolarisEntityManager;
+    /**
+     * Gets repository for the given entity.
+     */
+    // @ts-ignore
+    public getRepository<Entity>(
+        target: ObjectType<Entity> | EntitySchema<Entity> | string,
+    ): PolarisRepository<Entity> {
+        return ((this.manager as unknown) as PolarisEntityManager).getRepository(target);
+    }
+}

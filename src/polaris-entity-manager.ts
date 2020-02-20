@@ -4,9 +4,12 @@ import {
     DeepPartial,
     DeleteResult,
     EntityManager,
+    EntitySchema,
     FindOneOptions,
     UpdateResult,
 } from 'typeorm';
+// tslint:disable-next-line:no-submodule-imports
+import { RepositoryNotFoundError } from 'typeorm/error/RepositoryNotFoundError';
 import { PolarisCriteria } from './contextable-options/polaris-criteria';
 import { PolarisFindManyOptions } from './contextable-options/polaris-find-many-options';
 import { PolarisFindOneOptions } from './contextable-options/polaris-find-one-options';
@@ -15,6 +18,9 @@ import { DataVersionHandler } from './handlers/data-version-handler';
 import { FindHandler } from './handlers/find-handler';
 import { SoftDeleteHandler } from './handlers/soft-delete-handler';
 import { CommonModel } from './models/common-model';
+import { PolarisConnection } from './polaris-connection';
+import { PolarisRepository } from './polaris-repository';
+import { PolarisRepositoryFactory } from './polaris-repository-factory';
 
 export class PolarisEntityManager extends EntityManager {
     private static async setInfoOfCommonModel(
@@ -23,38 +29,67 @@ export class PolarisEntityManager extends EntityManager {
     ) {
         if (maybeEntityOrOptions instanceof Array) {
             for (const t of maybeEntityOrOptions) {
-                t.dataVersion = context.returnedExtensions.globalDataVersion;
-                t.realityId = (context.requestHeaders && context.requestHeaders.realityId) || 0;
+                t.dataVersion = context?.returnedExtensions?.globalDataVersion;
+                t.realityId = context?.requestHeaders?.realityId ?? 0;
                 PolarisEntityManager.setUpnOfEntity(t, context);
             }
-        } else {
-            maybeEntityOrOptions.dataVersion = context.returnedExtensions.globalDataVersion;
-            maybeEntityOrOptions.realityId =
-                (context.requestHeaders && context.requestHeaders.realityId) || 0;
+        } else if (maybeEntityOrOptions instanceof Object) {
+            maybeEntityOrOptions.dataVersion = context?.returnedExtensions?.globalDataVersion;
+            maybeEntityOrOptions.realityId = context?.requestHeaders?.realityId ?? 0;
             PolarisEntityManager.setUpnOfEntity(maybeEntityOrOptions, context);
         }
     }
 
-    private static setUpnOfEntity(entity: any, context: any) {
-        if (context.requestHeaders) {
+    private static setUpnOfEntity(entity: any, context: PolarisGraphQLContext) {
+        if (context?.requestHeaders) {
             if (entity.creationTime !== undefined) {
                 entity.createdBy =
-                    context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
+                    context?.requestHeaders?.upn || context?.requestHeaders?.requestingSystemId;
             } else {
                 entity.lastUpdatedBy =
-                    context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
+                    context?.requestHeaders?.upn || context?.requestHeaders?.requestingSystemId;
             }
         }
     }
+    // @ts-ignore
+    public connection: PolarisConnection;
     public dataVersionHandler: DataVersionHandler;
     public findHandler: FindHandler;
     public softDeleteHandler: SoftDeleteHandler;
+    // @ts-ignore
+    protected repositories: Array<PolarisRepository<any>>;
 
-    constructor(connection: Connection) {
-        super(connection, connection.createQueryRunner());
-        this.dataVersionHandler = new DataVersionHandler(this);
+    constructor(connection: PolarisConnection) {
+        super((connection as unknown) as Connection, connection?.createQueryRunner());
+        this.dataVersionHandler = new DataVersionHandler((this as unknown) as EntityManager);
         this.findHandler = new FindHandler();
-        this.softDeleteHandler = new SoftDeleteHandler(this);
+        this.softDeleteHandler = new SoftDeleteHandler((this as unknown) as EntityManager);
+    }
+    // @ts-ignore
+    public getRepository<Entity>(
+        // tslint:disable-next-line:ban-types
+        target: (new () => Entity) | Function | EntitySchema<Entity> | string,
+    ): PolarisRepository<Entity> {
+        // throw exception if there is no repository with this target registered
+        if (!this.connection.hasMetadata(target as any)) {
+            throw new RepositoryNotFoundError(this.connection.name, target);
+        }
+        // find already created repository instance and return it if found
+        const metadata = this.connection.getMetadata(target as any);
+        const repository: PolarisRepository<any> | undefined = this.repositories.find(
+            repo => repo.metadata === metadata,
+        );
+        if (repository) {
+            return repository;
+        }
+        // if repository was not found then create it, store its instance and return it
+        const newRepository: PolarisRepository<any> = new PolarisRepositoryFactory().create(
+            (this as unknown) as EntityManager,
+            metadata,
+            this.queryRunner,
+        );
+        this.repositories.push(newRepository);
+        return newRepository;
     }
 
     public async delete<Entity>(
@@ -142,6 +177,9 @@ export class PolarisEntityManager extends EntityManager {
                 return super.save(targetOrEntity, maybeEntityOrOptions.entities, maybeOptions);
             });
         } else {
+            if (maybeEntityOrOptions instanceof PolarisSaveOptions) {
+                maybeEntityOrOptions = maybeEntityOrOptions.entities;
+            }
             return super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
         }
     }

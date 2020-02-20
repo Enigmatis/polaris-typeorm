@@ -1,9 +1,10 @@
 import { PolarisRequestHeaders } from '@enigmatis/polaris-common';
-import { In, MoreThan } from 'typeorm';
-import { PolarisFindOneOptions } from '..';
-import { PolarisFindManyOptions } from '../contextable-options/polaris-find-many-options';
+import { FindConditions, In, MoreThan } from 'typeorm';
+import { PolarisFindManyOptions, PolarisFindOneOptions } from '..';
 
-export const getAllEntitiesIncludingDeleted = { where: { deleted: In([true, false]) } };
+export const getEntitiesIncludingDeletedConditions: FindConditions<any> = {
+    deleted: In([true, false]),
+};
 
 const realityIdCriteria = (includeLinkedOper: boolean, headers: PolarisRequestHeaders) =>
     includeLinkedOper && headers.realityId !== 0 && headers.includeLinkedOper

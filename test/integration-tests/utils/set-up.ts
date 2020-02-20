@@ -5,17 +5,28 @@ import {
 } from '@enigmatis/polaris-common';
 import { PolarisLogger } from '@enigmatis/polaris-logs';
 import { Connection } from 'typeorm';
-import { createPolarisConnection, PolarisSaveOptions } from '../../../src';
+import { createPolarisConnection } from '../../../src';
+import { PolarisConnection } from '../../../src/polaris-connection';
 import { Author } from '../../dal/author';
 import { Book } from '../../dal/book';
 import { Library } from '../../dal/library';
 import { Profile } from '../../dal/profile';
 import { User } from '../../dal/user';
+import {
+    authorRepo,
+    bookRepo,
+    libraryRepo,
+    profileRepo,
+    userRepo,
+} from '../postgres-tests/polaris-entity-manager.test';
 import { applicationLogProperties, connectionOptions, loggerConfig } from './test-properties';
 
-export const setUpTestConnection = async (): Promise<Connection> => {
+export const setUpTestConnection = async (): Promise<PolarisConnection> => {
     const polarisGraphQLLogger = await new PolarisLogger(loggerConfig, applicationLogProperties);
-    const connection = await createPolarisConnection(connectionOptions, polarisGraphQLLogger);
+    const connection: PolarisConnection = await createPolarisConnection(
+        connectionOptions,
+        polarisGraphQLLogger,
+    );
     const tables = ['user', 'profile', 'book', 'author', 'library', 'dataVersion'];
     for (const table of tables) {
         if (connection.manager) {
@@ -29,35 +40,29 @@ export const setUpTestConnection = async (): Promise<Connection> => {
     return connection;
 };
 
-export const profile = new Profile('female');
-export const user = new User('chen', profile);
+export const profile: Profile = new Profile('female');
+export const user: User = new User('chen', profile);
 export const rowling = 'J.K Rowling';
 export const mrCascade = 'Mr Cascade';
 export const harryPotter = 'Harry Potter and the Chamber of Secrets';
 export const cascadeBook = 'Cascade Book';
 
-export const initDb = async (connection: Connection) => {
+export const initDb = async () => {
     const context = { requestHeaders: { realityId: 0 } } as any;
     const hpBook = new Book(harryPotter);
     const cbBook = new Book(cascadeBook);
     const rowlingAuthor = new Author(rowling, [hpBook]);
     const cascadeAuthor = new Author(mrCascade, [cbBook]);
     cbBook.author = cascadeAuthor;
-    await connection.manager.save(Profile, new PolarisSaveOptions(profile, context) as any);
-    await connection.manager.save(User, new PolarisSaveOptions(user, context) as any);
-    await connection.manager.save(
-        Author,
-        new PolarisSaveOptions([rowlingAuthor, cascadeAuthor], context) as any,
-    );
-    await connection.manager.save(Book, new PolarisSaveOptions([hpBook, cbBook], context) as any);
-    await connection.manager.save(
-        Library,
-        new PolarisSaveOptions(new Library('public', [cbBook]), context) as any,
-    );
+    await profileRepo.save(context, profile);
+    await userRepo.save(context, user);
+    await authorRepo.save(context, [rowlingAuthor, cascadeAuthor]);
+    await bookRepo.save(context, [hpBook, cbBook]);
+    await libraryRepo.save(context, new Library('public', [cbBook]));
 };
 
-export function setHeaders(connection: Connection, headers?: PolarisRequestHeaders): void {
-    if (connection.manager.queryRunner && connection.manager.queryRunner.data) {
+export function setHeaders(connection: PolarisConnection, headers?: PolarisRequestHeaders): void {
+    if (connection?.manager?.queryRunner?.data) {
         connection.manager.queryRunner.data.requestHeaders = headers || {};
     }
 }
