@@ -1,5 +1,4 @@
-import { Connection, ObjectType } from 'typeorm';
-import { EntitySchema } from '../../dist/src';
+import { Connection, EntitySchema, ObjectType } from 'typeorm';
 import { PolarisEntityManager } from './polaris-entity-manager';
 import { PolarisRepository } from './polaris-repository';
 
