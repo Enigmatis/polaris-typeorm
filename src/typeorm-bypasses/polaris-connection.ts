@@ -17,6 +17,6 @@ export class PolarisConnection extends Connection {
     public getRepository<Entity>(
         target: ObjectType<Entity> | EntitySchema<Entity> | string,
     ): PolarisRepository<Entity> {
-        return ((this.manager as unknown) as PolarisEntityManager).getRepository(target);
+        return this.manager.getRepository(target);
     }
 }

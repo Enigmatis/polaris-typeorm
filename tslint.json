@@ -9,6 +9,7 @@
         "prettier": [true, ".prettierrc"],
         "interface-name": [true, "never-prefix"],
         "object-literal-sort-keys": false,
-        "no-submodule-imports": false
+        "no-submodule-imports": false,
+        "ban-types": false
     }
 }
