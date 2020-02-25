@@ -8,16 +8,15 @@ import {
     FindOneOptions,
     UpdateResult,
 } from 'typeorm';
-// tslint:disable-next-line:no-submodule-imports
 import { RepositoryNotFoundError } from 'typeorm/error/RepositoryNotFoundError';
-import { PolarisCriteria } from './contextable-options/polaris-criteria';
-import { PolarisFindManyOptions } from './contextable-options/polaris-find-many-options';
-import { PolarisFindOneOptions } from './contextable-options/polaris-find-one-options';
-import { PolarisSaveOptions } from './contextable-options/polaris-save-options';
-import { DataVersionHandler } from './handlers/data-version-handler';
-import { FindHandler } from './handlers/find-handler';
-import { SoftDeleteHandler } from './handlers/soft-delete-handler';
-import { CommonModel } from './models/common-model';
+import { PolarisCriteria } from '../contextable-options/polaris-criteria';
+import { PolarisFindManyOptions } from '../contextable-options/polaris-find-many-options';
+import { PolarisFindOneOptions } from '../contextable-options/polaris-find-one-options';
+import { PolarisSaveOptions } from '../contextable-options/polaris-save-options';
+import { DataVersionHandler } from '../handlers/data-version-handler';
+import { FindHandler } from '../handlers/find-handler';
+import { SoftDeleteHandler } from '../handlers/soft-delete-handler';
+import { CommonModel } from '../models/common-model';
 import { PolarisConnection } from './polaris-connection';
 import { PolarisRepository } from './polaris-repository';
 import { PolarisRepositoryFactory } from './polaris-repository-factory';

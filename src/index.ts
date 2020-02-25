@@ -1,4 +1,4 @@
-export { createPolarisConnection } from './connections/create-connection';
+export { createPolarisConnection } from './typeorm-bypasses/create-connection';
 export { CommonModel } from './models/common-model';
 export { DataVersion } from './models/data-version';
 export { PolarisSaveOptions } from './contextable-options/polaris-save-options';

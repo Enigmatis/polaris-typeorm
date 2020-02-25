@@ -1,7 +1,7 @@
 import { DataVersion } from '../../../src';
+import { PolarisConnection } from '../../../src/typeorm-bypasses/polaris-connection';
+import { PolarisRepository } from '../../../src/typeorm-bypasses/polaris-repository';
 import { getEntitiesIncludingDeletedConditions } from '../../../src/handlers/find-handler';
-import { PolarisConnection } from '../../../src/polaris-connection';
-import { PolarisRepository } from '../../../src/polaris-repository';
 import { Author } from '../../dal/author';
 import { Book } from '../../dal/book';
 import { Library } from '../../dal/library';

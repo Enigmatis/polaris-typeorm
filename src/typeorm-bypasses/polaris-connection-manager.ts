@@ -7,12 +7,12 @@ import { PolarisConnection } from './polaris-connection';
 import { PolarisEntityManager } from './polaris-entity-manager';
 
 /**
- * ConnectionManager is used to store and manage multiple orm connections.
+ * ConnectionManager is used to store and manage multiple orm typeorm-bypasses.
  * It also provides useful factory methods to simplify connection creation.
  */
 export class PolarisConnectionManager extends ConnectionManager {
     /**
-     * List of connections registered in this connection manager.
+     * List of typeorm-bypasses registered in this connection manager.
      */
     // @ts-ignore
     public readonly connections: PolarisConnection[] = [];

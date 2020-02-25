@@ -13,10 +13,10 @@ import {
 } from 'typeorm';
 // tslint:disable-next-line:no-submodule-imports
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { PolarisCriteria } from './contextable-options/polaris-criteria';
-import { PolarisFindManyOptions } from './contextable-options/polaris-find-many-options';
-import { PolarisFindOneOptions } from './contextable-options/polaris-find-one-options';
-import { PolarisSaveOptions } from './contextable-options/polaris-save-options';
+import { PolarisCriteria } from '../contextable-options/polaris-criteria';
+import { PolarisFindManyOptions } from '../contextable-options/polaris-find-many-options';
+import { PolarisFindOneOptions } from '../contextable-options/polaris-find-one-options';
+import { PolarisSaveOptions } from '../contextable-options/polaris-save-options';
 
 /**
  * Repository is supposed to work with your entity objects. Find entities, insert, update, delete, etc.
