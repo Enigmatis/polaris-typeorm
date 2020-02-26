@@ -60,7 +60,7 @@
   },
   "homepage": "https://github.com/Enigmatis/polaris-typeorm#readme",
   "dependencies": {
-    "@enigmatis/polaris-common": "^1.1.0",
+    "@enigmatis/polaris-common": "^1.1.1",
     "@enigmatis/polaris-logs": "^2.8.1",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.2.22"
