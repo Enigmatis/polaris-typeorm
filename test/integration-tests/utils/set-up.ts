@@ -5,8 +5,7 @@ import {
 } from '@enigmatis/polaris-common';
 import { PolarisLogger } from '@enigmatis/polaris-logs';
 import { Connection } from 'typeorm';
-import { createPolarisConnection } from '../../../src';
-import { PolarisConnection } from '../../../src/typeorm-bypasses/polaris-connection';
+import { createPolarisConnection, PolarisConnection } from '../../../src';
 import { Author } from '../../dal/author';
 import { Book } from '../../dal/book';
 import { Library } from '../../dal/library';

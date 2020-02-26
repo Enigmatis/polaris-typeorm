@@ -100,9 +100,8 @@ export class PolarisEntityManager extends EntityManager {
             return this.wrapTransaction(async () => {
                 criteria.context = criteria.context || {};
                 await this.dataVersionHandler.updateDataVersion(criteria.context);
-                const config = this.connection.options.extra.config;
                 if (
-                    (config && config.allowSoftDelete === false) ||
+                    this.connection.options.extra?.config?.allowSoftDelete === false ||
                     !targetOrEntity.toString().includes(CommonModel.name)
                 ) {
                     return super.delete(targetOrEntity, criteria.criteria);

@@ -1,4 +1,4 @@
-import { ConnectionManager, ConnectionOptions } from 'typeorm';
+import { ConnectionManager, ConnectionOptions, getFromContainer } from 'typeorm';
 import { AlreadyHasActiveConnectionError } from 'typeorm/error/AlreadyHasActiveConnectionError';
 import { ConnectionNotFoundError } from 'typeorm/error/ConnectionNotFoundError';
 import { PolarisConnection } from './polaris-connection';
@@ -62,4 +62,8 @@ export class PolarisConnectionManager extends ConnectionManager {
         this.connections.push(connection);
         return connection;
     }
+}
+
+export function getPolarisConnectionManager() {
+    return getFromContainer(PolarisConnectionManager);
 }
