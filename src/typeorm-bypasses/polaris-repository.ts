@@ -11,7 +11,6 @@ import {
     SaveOptions,
     UpdateResult,
 } from 'typeorm';
-// tslint:disable-next-line:no-submodule-imports
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { PolarisCriteria } from '../contextable-options/polaris-criteria';
 import { PolarisFindManyOptions } from '../contextable-options/polaris-find-many-options';

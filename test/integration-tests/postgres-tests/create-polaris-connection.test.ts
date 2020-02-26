@@ -1,9 +1,17 @@
-import { getPolarisConnectionManager, PolarisConnection } from '../../../src';
-import { setUpTestConnection } from '../utils/set-up';
+import { PolarisLogger } from '@enigmatis/polaris-logs';
+import { createPolarisConnection, getPolarisConnectionManager, PolarisConnection } from '../../../src';
+import { applicationLogProperties, connectionOptions, loggerConfig } from '../utils/test-properties';
 
 describe('get connection manager tests', () => {
     it('create connection and get it from manager, expect them to be the same one', async () => {
-        const connection: PolarisConnection = await setUpTestConnection();
+        const polarisGraphQLLogger = await new PolarisLogger(
+            loggerConfig,
+            applicationLogProperties,
+        );
+        const connection: PolarisConnection = await createPolarisConnection(
+            connectionOptions,
+            polarisGraphQLLogger,
+        );
         expect(getPolarisConnectionManager().get()).toEqual(connection);
         await connection.close();
     });

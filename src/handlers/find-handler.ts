@@ -16,17 +16,15 @@ export class FindHandler {
         includeLinkedOper: boolean,
         polarisOptions?: PolarisFindManyOptions<Entity> | PolarisFindOneOptions<Entity>,
     ) {
-        const headers: PolarisRequestHeaders =
-            (polarisOptions && polarisOptions.context && polarisOptions.context.requestHeaders) ||
-            {};
+        const headers: PolarisRequestHeaders = polarisOptions?.context?.requestHeaders || {};
 
         let polarisCriteria: any = {};
-        if (polarisOptions && typeof polarisOptions.criteria === 'string') {
+        if (typeof polarisOptions?.criteria === 'string') {
             polarisCriteria = { where: { id: polarisOptions.criteria } };
-        } else if (polarisOptions && polarisCriteria instanceof Array) {
+        } else if (polarisOptions?.criteria instanceof Array) {
             polarisCriteria = { where: { id: In(polarisOptions.criteria) } };
         } else {
-            polarisCriteria = (polarisOptions && polarisOptions.criteria) || {};
+            polarisCriteria = polarisOptions?.criteria || {};
         }
 
         polarisCriteria.where = { ...polarisCriteria.where };

@@ -4,7 +4,6 @@ import { PolarisTypeormLogger } from '../../../src/polaris-typeorm-logger';
 
 const polarisGraphQLLogger = { debug: jest.fn() } as any;
 
-// tslint:disable-next-line:no-var-requires
 const connectionManager = require('../../../src/typeorm-bypasses/polaris-connection-manager');
 
 connectionManager.getPolarisConnectionManager = jest.fn(() => {
