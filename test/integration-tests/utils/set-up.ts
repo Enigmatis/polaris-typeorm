@@ -40,8 +40,10 @@ export const setUpTestConnection = async (): Promise<PolarisConnection> => {
     return connection;
 };
 
-export const profile: Profile = new Profile('female');
-export const user: User = new User('chen', profile);
+export const gender: string = 'female';
+const profile: Profile = new Profile(gender);
+export const userName: string = 'chen';
+const user: User = new User(userName, profile);
 export const rowling = 'J.K Rowling';
 export const mrCascade = 'Mr Cascade';
 export const harryPotter = 'Harry Potter and the Chamber of Secrets';

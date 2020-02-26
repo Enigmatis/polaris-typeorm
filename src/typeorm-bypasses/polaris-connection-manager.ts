@@ -1,7 +1,5 @@
 import { ConnectionManager, ConnectionOptions } from 'typeorm';
-// tslint:disable-next-line:no-submodule-imports
 import { AlreadyHasActiveConnectionError } from 'typeorm/error/AlreadyHasActiveConnectionError';
-// tslint:disable-next-line:no-submodule-imports
 import { ConnectionNotFoundError } from 'typeorm/error/ConnectionNotFoundError';
 import { PolarisConnection } from './polaris-connection';
 import { PolarisEntityManager } from './polaris-entity-manager';

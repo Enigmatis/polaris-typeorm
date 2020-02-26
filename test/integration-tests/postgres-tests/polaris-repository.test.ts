@@ -9,23 +9,23 @@ import { Profile } from '../../dal/profile';
 import { User } from '../../dal/user';
 import {
     cascadeBook,
+    gender,
     generateContext,
     harryPotter,
     initDb,
     mrCascade,
-    profile,
     rowling,
     setHeaders,
     setUpTestConnection,
-    user,
+    userName,
 } from '../utils/set-up';
 
 const bookFindOneOptions = { where: { title: harryPotter } };
 const authorFindOneOptions = { where: { name: rowling } };
 const bookWithCascadeFindOneOptions = { where: { title: cascadeBook } };
 const authorWithCascadeFindOneOptions = { where: { name: mrCascade } };
-const userFindOneOptions = { where: { name: user.name } };
-const profileFindOneOptions = { where: { gender: profile.gender } };
+const userFindOneOptions = { where: { name: userName } };
+const profileFindOneOptions = { where: { gender } };
 
 export let connection: PolarisConnection;
 export let authorRepo: PolarisRepository<Author>;

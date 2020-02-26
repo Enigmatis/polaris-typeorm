@@ -18,9 +18,11 @@ export async function createPolarisConnection(
         .create(options, getFromContainer(PolarisEntityManager))
         .connect();
 }
+
 export function getPolarisConnectionManager() {
     return getFromContainer(PolarisConnectionManager);
 }
+
 const setPolarisConnectionOptions = (
     options: ConnectionOptions,
     logger: AbstractPolarisLogger,

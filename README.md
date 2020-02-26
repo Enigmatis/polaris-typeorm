@@ -19,6 +19,17 @@ This library provides support and wrappers for typeorm functionality. [[Typeorm]
 
 Through this class we can create the polaris connection to our DB on top of typeorm.
 
+```
+ const connection: PolarisConnection = await createConnection(
+        connectionOptions,
+        polarisGraphQLLogger,
+    );
+```
+
+The ``createConnection`` method exported from this class receives:
+ - ``ConnectionOptions`` from ``typeorm`` (see documentation on typeorm) 
+ - ``AbstractPolarisLogger`` from ``polaris-logs``, implemented by ``PolarisGraphQLLogger`` from `@enigmatis/polaris-graphql-logger` or by ``PolarisLogger`` from `@enigmatis/polaris-logs` 
+
 #### CommonModel
 
 This class represents the base entity that all of your polaris entities should inherit from.
