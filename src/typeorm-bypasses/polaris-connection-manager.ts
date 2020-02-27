@@ -52,9 +52,8 @@ export class PolarisConnectionManager extends ConnectionManager {
         }
         // create a new connection
         const connection = new PolarisConnection(options);
-        const entityManager = new PolarisEntityManager(connection);
         Object.defineProperty(connection, 'manager', {
-            value: entityManager,
+            value: polarisEntityManager,
         });
         Object.defineProperty(connection.manager, 'connection', {
             value: connection,
