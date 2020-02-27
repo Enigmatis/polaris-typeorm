@@ -40,9 +40,7 @@ export const setUpTestConnection = async (): Promise<PolarisConnection> => {
 };
 
 export const gender: string = 'female';
-const profile: Profile = new Profile(gender);
 export const userName: string = 'chen';
-const user: User = new User(userName, profile);
 export const rowling = 'J.K Rowling';
 export const mrCascade = 'Mr Cascade';
 export const harryPotter = 'Harry Potter and the Chamber of Secrets';
@@ -55,8 +53,9 @@ export const initDb = async () => {
     const rowlingAuthor = new Author(rowling, [hpBook]);
     const cascadeAuthor = new Author(mrCascade, [cbBook]);
     cbBook.author = cascadeAuthor;
+    const profile: Profile = new Profile(gender);
     await profileRepo.save(context, profile);
-    await userRepo.save(context, user);
+    await userRepo.save(context, new User(userName, profile));
     await authorRepo.save(context, [rowlingAuthor, cascadeAuthor]);
     await bookRepo.save(context, [hpBook, cbBook]);
     await libraryRepo.save(context, new Library('public', [cbBook]));
