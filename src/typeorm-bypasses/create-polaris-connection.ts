@@ -1,12 +1,11 @@
 import { AbstractPolarisLogger } from '@enigmatis/polaris-logs';
 import * as path from 'path';
-import { ConnectionOptions, getFromContainer } from 'typeorm';
+import { ConnectionOptions } from 'typeorm';
 import { CommonModel, DataVersion } from '..';
 import { PolarisTypeormLogger } from '../polaris-typeorm-logger';
 import { TypeORMConfig } from '../typeorm-config';
 import { PolarisConnection } from './polaris-connection';
 import { getPolarisConnectionManager } from './polaris-connection-manager';
-import { PolarisEntityManager } from './polaris-entity-manager';
 
 export async function createPolarisConnection(
     options: ConnectionOptions,
@@ -15,7 +14,7 @@ export async function createPolarisConnection(
 ): Promise<PolarisConnection> {
     options = setPolarisConnectionOptions(options, logger, config);
     return getPolarisConnectionManager()
-        .create(options, getFromContainer(PolarisEntityManager))
+        .create(options, undefined as any)
         .connect();
 }
 

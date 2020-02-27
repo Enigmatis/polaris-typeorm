@@ -53,7 +53,7 @@ export class PolarisConnectionManager extends ConnectionManager {
         // create a new connection
         const connection = new PolarisConnection(options);
         Object.defineProperty(connection, 'manager', {
-            value: polarisEntityManager,
+            value: polarisEntityManager || new PolarisEntityManager(connection),
         });
         Object.defineProperty(connection.manager, 'connection', {
             value: connection,
