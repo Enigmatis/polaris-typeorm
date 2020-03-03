@@ -1,0 +1,12 @@
+import { PolarisExtensions, PolarisGraphQLContext, PolarisRequestHeaders } from '@enigmatis/polaris-common';
+import { PolarisConnection } from '../../../src';
+export declare const setUpTestConnection: () => Promise<PolarisConnection>;
+export declare const gender: string;
+export declare const userName: string;
+export declare const rowling = "J.K Rowling";
+export declare const mrCascade = "Mr Cascade";
+export declare const harryPotter = "Harry Potter and the Chamber of Secrets";
+export declare const cascadeBook = "Cascade Book";
+export declare const initDb: () => Promise<void>;
+export declare function setHeaders(connection: PolarisConnection, headers?: PolarisRequestHeaders): void;
+export declare function generateContext(headers?: PolarisRequestHeaders, extensions?: PolarisExtensions): PolarisGraphQLContext;
