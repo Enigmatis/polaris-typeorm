@@ -1,6 +1,6 @@
-import { EntityManager, In, UpdateResult } from 'typeorm';
-import { CommonModel } from '..';
-import { PolarisCriteria } from '../contextable-options/polaris-criteria';
+import {EntityManager, In, UpdateResult} from 'typeorm';
+import {CommonModel} from '..';
+import {PolarisCriteria} from '../contextable-options/polaris-criteria';
 
 export class SoftDeleteHandler {
     private manager: EntityManager;
@@ -59,7 +59,7 @@ export class SoftDeleteHandler {
         return softDeletedEntities;
     }
 
-    private updateWithReturningIds(
+    private async updateWithReturningIds(
         target: any,
         criteria: string | string[] | any,
         partialEntity: any,
@@ -77,13 +77,15 @@ export class SoftDeleteHandler {
         }
 
         if (typeof criteria === 'string' || criteria instanceof Array) {
-            return this.manager
-                .createQueryBuilder()
-                .update(target)
-                .set(partialEntity)
-                .whereInIds(criteria)
-                .returning('id')
-                .execute();
+            const entitiesToDelete = await this.manager.find(target, {where: {id: In(criteria instanceof Array ? criteria : [criteria]), deleted: false}});
+            entitiesToDelete.forEach((entity, index) => {
+                entitiesToDelete[index] = {...entity, ...partialEntity};
+            })
+            await this.manager.save(target, entitiesToDelete);
+            const updateResult = new UpdateResult();
+            updateResult.affected = entitiesToDelete.length;
+            updateResult.raw = entitiesToDelete;
+            return updateResult;
         } else {
             return this.manager
                 .createQueryBuilder()
