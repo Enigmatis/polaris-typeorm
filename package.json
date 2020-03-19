@@ -81,7 +81,7 @@
     "rimraf": "^3.0.2",
     "travis-deploy-once": "^5.0.11",
     "ts-jest": "^24.3.0",
-    "ts-node": "^8.6.2",
+    "ts-node": "^8.7.0",
     "ts-node-register": "^1.0.0",
     "tslint": "^5.15.0",
     "tslint-config-prettier": "^1.18.0",

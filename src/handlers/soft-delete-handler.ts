@@ -1,6 +1,5 @@
 import { EntityManager, In, UpdateResult } from 'typeorm';
-import {CommonModel, PolarisCriteria} from '..';
-
+import { CommonModel, PolarisCriteria } from '..';
 
 export class SoftDeleteHandler {
     private manager: EntityManager;
@@ -20,7 +19,7 @@ export class SoftDeleteHandler {
                 deleted: true,
                 lastUpdatedBy:
                     polarisCriteria?.context?.requestHeaders?.upn ||
-                    polarisCriteria?.context?.requestHeaders?.requestingSystemName
+                    polarisCriteria?.context?.requestHeaders?.requestingSystemName,
             },
         );
         if (softDeletedEntities.affected === 0) {

@@ -1,8 +1,7 @@
-import {CommonModel} from '../../../src';
-import {PolarisCriteria} from '../../../src';
-import {SoftDeleteHandler} from '../../../src/handlers/soft-delete-handler';
-import {Book} from '../../dal/book';
-import {Library} from '../../dal/library';
+import { CommonModel, PolarisCriteria } from '../../../src';
+import { SoftDeleteHandler } from '../../../src/handlers/soft-delete-handler';
+import { Book } from '../../dal/book';
+import { Library } from '../../dal/library';
 
 let connection: any;
 let metadata: any;
@@ -28,8 +27,8 @@ describe('soft delete handler tests', () => {
         ];
         const execute = jest.fn();
         execute
-            .mockResolvedValueOnce({affected: 1, raw: [{id: 1}]})
-            .mockResolvedValueOnce({affected: 0, raw: []});
+            .mockResolvedValueOnce({ affected: 1, raw: [{ id: 1 }] })
+            .mockResolvedValueOnce({ affected: 0, raw: [] });
         const returningAndExecuteMock = jest.fn(() => {
             return {
                 returning: jest.fn(() => {
@@ -41,11 +40,11 @@ describe('soft delete handler tests', () => {
         });
         connection = {
             manager: {
-                queryRunner: {data: {requestHeaders: {}}},
+                queryRunner: { data: { requestHeaders: {} } },
                 save: jest.fn(),
                 connection: {
                     getMetadata: jest.fn(() => metadata),
-                    options: {type: "postgres"}
+                    options: { type: 'postgres' },
                 },
                 createQueryBuilder: jest.fn(() => {
                     return {
@@ -92,14 +91,14 @@ describe('soft delete handler tests', () => {
         const lib = new Library('library');
         metadata.relations[0].inverseEntityMetadata.inheritanceTree = [Book, CommonModel];
         metadata.relations[0].inverseEntityMetadata.foreignKeys[0].onDelete = '';
-        const afterDelete = [{...lib, deleted:true, lastUpdatedBy: undefined}];
+        const afterDelete = [{ ...lib, deleted: true, lastUpdatedBy: undefined }];
         connection = {
             manager: {
-                queryRunner: {data: {requestHeaders: {}}},
+                queryRunner: { data: { requestHeaders: {} } },
                 save: jest.fn(),
                 connection: {
                     getMetadata: jest.fn(() => metadata),
-                    options: {type: "sqlite"}
+                    options: { type: 'sqlite' },
                 },
                 find: jest.fn(() => [lib]),
             },
@@ -108,6 +107,6 @@ describe('soft delete handler tests', () => {
         await softDeleteHandler.softDeleteRecursive(Library, new PolarisCriteria(lib, {} as any));
         expect(connection.manager.find).toBeCalledTimes(1);
         expect(connection.manager.save).toBeCalledTimes(1);
-        expect(connection.manager.save).toBeCalledWith(Library, afterDelete)
+        expect(connection.manager.save).toBeCalledWith(Library, afterDelete);
     });
 });

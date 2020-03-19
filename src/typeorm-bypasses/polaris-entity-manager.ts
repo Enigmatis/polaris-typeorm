@@ -1,4 +1,4 @@
-import {PolarisGraphQLContext} from '@enigmatis/polaris-common';
+import { PolarisGraphQLContext } from '@enigmatis/polaris-common';
 import {
     Connection,
     DeepPartial,
@@ -9,7 +9,7 @@ import {
     In,
     UpdateResult,
 } from 'typeorm';
-import {RepositoryNotFoundError} from 'typeorm/error/RepositoryNotFoundError';
+import { RepositoryNotFoundError } from 'typeorm/error/RepositoryNotFoundError';
 import {
     CommonModel,
     PolarisCriteria,
@@ -17,12 +17,12 @@ import {
     PolarisFindOneOptions,
     PolarisSaveOptions,
 } from '..';
-import {DataVersionHandler} from '../handlers/data-version-handler';
-import {FindHandler} from '../handlers/find-handler';
-import {SoftDeleteHandler} from '../handlers/soft-delete-handler';
-import {PolarisConnection} from './polaris-connection';
-import {PolarisRepository} from './polaris-repository';
-import {PolarisRepositoryFactory} from './polaris-repository-factory';
+import { DataVersionHandler } from '../handlers/data-version-handler';
+import { FindHandler } from '../handlers/find-handler';
+import { SoftDeleteHandler } from '../handlers/soft-delete-handler';
+import { PolarisConnection } from './polaris-connection';
+import { PolarisRepository } from './polaris-repository';
+import { PolarisRepositoryFactory } from './polaris-repository-factory';
 
 export class PolarisEntityManager extends EntityManager {
     private static async setInfoOfCommonModel(
@@ -206,7 +206,7 @@ export class PolarisEntityManager extends EntityManager {
                 const globalDataVersion = criteria.context.returnedExtensions.globalDataVersion;
                 const upnOrRequestingSystemId = criteria.context.requestHeaders
                     ? criteria.context.requestHeaders.upn ||
-                    criteria.context.requestHeaders.requestingSystemId
+                      criteria.context.requestHeaders.requestingSystemId
                     : '';
                 partialEntity = {
                     ...partialEntity,
@@ -217,25 +217,30 @@ export class PolarisEntityManager extends EntityManager {
                 updateCriteria = criteria.criteria;
             }
 
-            if (this.connection.options.type === "postgres" || this.connection.options.type === "mssql") {
+            if (
+                this.connection.options.type === 'postgres' ||
+                this.connection.options.type === 'mssql'
+            ) {
                 return super.update(target, updateCriteria, partialEntity);
             }
 
             if (typeof updateCriteria === 'string' || updateCriteria instanceof Array) {
                 updateCriteria = {
-                    where: {id: In(updateCriteria instanceof Array ? updateCriteria : [updateCriteria])},
+                    where: {
+                        id: In(updateCriteria instanceof Array ? updateCriteria : [updateCriteria]),
+                    },
                 };
             }
 
             const entitiesToUpdate = await super.find(target, updateCriteria);
             entitiesToUpdate.forEach((entityToUpdate: typeof target, index) => {
-                entitiesToUpdate[index] = {...entityToUpdate, ...partialEntity}
+                entitiesToUpdate[index] = { ...entityToUpdate, ...partialEntity };
             });
             await super.save(target, entitiesToUpdate);
             const updateResult: UpdateResult = {
                 generatedMaps: [],
                 raw: entitiesToUpdate,
-                affected: entitiesToUpdate.length
+                affected: entitiesToUpdate.length,
             };
             return updateResult;
         });
