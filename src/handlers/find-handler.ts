@@ -44,7 +44,7 @@ export class FindHandler {
 
             if (polarisCriteria.relations) {
                 polarisCriteria.relations.forEach((relation: any) => {
-                    polarisCriteria.where = this.setNestedDeleteFilter(relation, polarisCriteria.where);
+                    this.setNestedDeleteFilter(relation, polarisCriteria.where);
                 });
 
             }
@@ -52,14 +52,10 @@ export class FindHandler {
     }
 
     private setNestedDeleteFilter(key: string, object: any) {
-        let result: any;
-        result = object;
         let deleted = false;
         let relations = key.split(".");
         relations.forEach((relation: string ) => {
             object = object[relation] = {deleted, ...object[relation]};
         });
-
-        return result;
     }
 }
