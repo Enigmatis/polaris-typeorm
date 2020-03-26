@@ -18,12 +18,12 @@ describe('snapshot page tests', () => {
         const data: string = 'foo';
         const snapshotPage: SnapshotPage = new SnapshotPage(data);
         await snapshotRepo.save({} as any, snapshotPage);
-        const foo: SnapshotPage | undefined = await snapshotRepo.findOne(
+        const page: SnapshotPage | undefined = await snapshotRepo.findOne(
             {} as any,
             snapshotPage.getId(),
         );
-        expect(foo).toBeDefined();
-        expect(foo).not.toBeNull();
-        expect(foo!.getData()).toBe(data);
+        expect(page).toBeDefined();
+        expect(page).not.toBeNull();
+        expect(page!.getData()).toBe(data);
     });
 });

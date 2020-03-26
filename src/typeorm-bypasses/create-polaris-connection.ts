@@ -28,9 +28,9 @@ const setPolarisConnectionOptions = (
     if (config) {
         Object.assign(options, { extra: { ...options.extra, config } });
     }
-    const defaultEntities = [CommonModel, DataVersion, SnapshotPage];
+    const polarisEntities = [CommonModel, DataVersion, SnapshotPage];
     Object.assign(options, {
-        entities: options.entities ? [...options.entities, ...defaultEntities] : defaultEntities,
+        entities: options.entities ? [...options.entities, ...polarisEntities] : polarisEntities,
     });
     return options;
 };
