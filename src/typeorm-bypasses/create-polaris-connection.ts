@@ -1,7 +1,6 @@
 import { AbstractPolarisLogger } from '@enigmatis/polaris-logs';
-import * as path from 'path';
 import { ConnectionOptions } from 'typeorm';
-import { CommonModel, DataVersion } from '..';
+import { CommonModel, DataVersion, SnapshotPage } from '..';
 import { PolarisTypeormLogger } from '../polaris-typeorm-logger';
 import { TypeORMConfig } from '../typeorm-config';
 import { PolarisConnection } from './polaris-connection';
@@ -29,10 +28,9 @@ const setPolarisConnectionOptions = (
     if (config) {
         Object.assign(options, { extra: { ...options.extra, config } });
     }
+    const defaultEntities = [CommonModel, DataVersion, SnapshotPage];
     Object.assign(options, {
-        entities: options.entities
-            ? [...options.entities, CommonModel, DataVersion]
-            : [CommonModel, DataVersion],
+        entities: options.entities ? [...options.entities, ...defaultEntities] : defaultEntities,
     });
     return options;
 };

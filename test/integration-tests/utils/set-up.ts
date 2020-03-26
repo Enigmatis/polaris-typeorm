@@ -21,21 +21,7 @@ import { applicationLogProperties, connectionOptions, loggerConfig } from './tes
 
 export const setUpTestConnection = async (): Promise<PolarisConnection> => {
     const polarisGraphQLLogger = await new PolarisLogger(loggerConfig, applicationLogProperties);
-    const connection: PolarisConnection = await createPolarisConnection(
-        connectionOptions,
-        polarisGraphQLLogger,
-    );
-    const tables = ['user', 'profile', 'book', 'author', 'library', 'dataVersion'];
-    for (const table of tables) {
-        if (connection.manager) {
-            try {
-                await connection.manager.getRepository(table).query('DELETE FROM "' + table + '";');
-            } catch (e) {
-                polarisGraphQLLogger.error(e.message);
-            }
-        }
-    }
-    return connection;
+    return createPolarisConnection(connectionOptions, polarisGraphQLLogger);
 };
 
 export const gender: string = 'female';
