@@ -21,7 +21,7 @@ export const applicationLogProperties: ApplicationProperties = {
 };
 
 export const loggerConfig: LoggerConfiguration = {
-    loggerLevel: 'debug',
+    loggerLevel: 'info',
     writeToConsole: true,
     writeFullMessageToConsole: false,
 };
