@@ -8,7 +8,7 @@ export const connectionOptions: ConnectionOptions = {
     entities: [path.resolve(__dirname, '../..') + '/dal/*.ts'],
     synchronize: true,
     dropSchema: true,
-    logging: true,
+    logging: ['error'],
     schema: process.env.SCHEMA_NAME,
 };
 
@@ -21,7 +21,7 @@ export const applicationLogProperties: ApplicationProperties = {
 };
 
 export const loggerConfig: LoggerConfiguration = {
-    loggerLevel: 'info',
+    loggerLevel: 'debug',
     writeToConsole: true,
     writeFullMessageToConsole: false,
 };
