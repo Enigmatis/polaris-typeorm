@@ -8,7 +8,7 @@ export const connectionOptions: ConnectionOptions = {
     entities: [path.resolve(__dirname, '../..') + '/dal/*.ts'],
     synchronize: true,
     dropSchema: true,
-    logging: ['error'],
+    logging: true,
     schema: process.env.SCHEMA_NAME,
 };
 
