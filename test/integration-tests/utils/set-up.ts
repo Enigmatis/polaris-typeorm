@@ -10,19 +10,7 @@ import { Book } from '../../dal/book';
 import { Library } from '../../dal/library';
 import { Profile } from '../../dal/profile';
 import { User } from '../../dal/user';
-import {
-    authorRepo,
-    bookRepo,
-    libraryRepo,
-    profileRepo,
-    userRepo,
-} from '../postgres-tests/polaris-repository.test';
 import { applicationLogProperties, connectionOptions, loggerConfig } from './test-properties';
-
-export const setUpTestConnection = async (): Promise<PolarisConnection> => {
-    const polarisGraphQLLogger = await new PolarisLogger(loggerConfig, applicationLogProperties);
-    return createPolarisConnection(connectionOptions, polarisGraphQLLogger);
-};
 
 export const gender: string = 'female';
 export const userName: string = 'chen';
@@ -31,7 +19,12 @@ export const mrCascade = 'Mr Cascade';
 export const harryPotter = 'Harry Potter and the Chamber of Secrets';
 export const cascadeBook = 'Cascade Book';
 
-export const initDb = async () => {
+export const setUpTestConnection = async (): Promise<PolarisConnection> => {
+    const polarisGraphQLLogger = await new PolarisLogger(loggerConfig, applicationLogProperties);
+    return createPolarisConnection(connectionOptions, polarisGraphQLLogger);
+};
+
+export const initDb = async (connection: PolarisConnection) => {
     const context = { requestHeaders: { realityId: 0 } } as any;
     const hpBook = new Book(harryPotter);
     const cbBook = new Book(cascadeBook);
@@ -39,6 +32,13 @@ export const initDb = async () => {
     const cascadeAuthor = new Author(mrCascade, [cbBook]);
     cbBook.author = cascadeAuthor;
     const profile: Profile = new Profile(gender);
+
+    const authorRepo = connection.getRepository(Author);
+    const bookRepo = connection.getRepository(Book);
+    const profileRepo = connection.getRepository(Profile);
+    const userRepo = connection.getRepository(User);
+    const libraryRepo = connection.getRepository(Library);
+
     await profileRepo.save(context, profile);
     await userRepo.save(context, new User(userName, profile));
     await authorRepo.save(context, [rowlingAuthor, cascadeAuthor]);
