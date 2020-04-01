@@ -34,7 +34,7 @@ export class PolarisRepository<Entity extends ObjectLiteral> extends Repository<
     ): Promise<T | T[]> {
         return this.manager.save<T>(
             this.metadata.target as any,
-            new PolarisSaveOptions(entityOrEntities, context) as any,
+            this.metadata.target.toString().includes(CommonModel.name) ? new PolarisSaveOptions(entityOrEntities, context) as any : entityOrEntities,
             options,
         );
     }

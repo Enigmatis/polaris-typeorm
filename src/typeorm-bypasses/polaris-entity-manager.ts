@@ -111,8 +111,7 @@ export class PolarisEntityManager extends EntityManager {
                 criteria.context = criteria.context || {};
                 await this.dataVersionHandler.updateDataVersion(criteria.context);
                 if (
-                    this.connection.options.extra?.config?.allowSoftDelete === false ||
-                    !targetOrEntity.toString().includes(CommonModel.name)
+                    this.connection.options.extra?.config?.allowSoftDelete === false
                 ) {
                     return super.delete(targetOrEntity, criteria.criteria);
                 }
@@ -131,7 +130,7 @@ export class PolarisEntityManager extends EntityManager {
         if (criteria instanceof PolarisFindOneOptions) {
             return super.findOne(
                 entityClass,
-                this.calculateCriteria<Entity>(entityClass, true, criteria),
+                this.findHandler.findConditions<Entity>(false, criteria),
                 maybeOptions,
             );
         } else {
@@ -146,7 +145,7 @@ export class PolarisEntityManager extends EntityManager {
         if (criteria instanceof PolarisFindManyOptions) {
             return super.find(
                 entityClass,
-                this.calculateCriteria<Entity>(entityClass, true, criteria),
+                this.findHandler.findConditions<Entity>(false, criteria),
             );
         } else {
             return super.find(entityClass, criteria);
@@ -160,7 +159,7 @@ export class PolarisEntityManager extends EntityManager {
         if (criteria instanceof PolarisFindManyOptions) {
             return super.count(
                 entityClass,
-                this.calculateCriteria<Entity>(entityClass, false, criteria),
+                this.findHandler.findConditions<Entity>(false, criteria),
             );
         } else {
             return super.count(entityClass, criteria);
@@ -173,8 +172,7 @@ export class PolarisEntityManager extends EntityManager {
         maybeOptions?: any,
     ): Promise<T | T[]> {
         if (
-            maybeEntityOrOptions instanceof PolarisSaveOptions &&
-            targetOrEntity.toString().includes(CommonModel.name)
+            maybeEntityOrOptions instanceof PolarisSaveOptions
         ) {
             return this.wrapTransaction(async () => {
                 maybeEntityOrOptions.context = maybeEntityOrOptions.context || {};
@@ -186,9 +184,6 @@ export class PolarisEntityManager extends EntityManager {
                 return super.save(targetOrEntity, maybeEntityOrOptions.entities, maybeOptions);
             });
         } else {
-            if (maybeEntityOrOptions instanceof PolarisSaveOptions) {
-                maybeEntityOrOptions = maybeEntityOrOptions.entities;
-            }
             return super.save(targetOrEntity, maybeEntityOrOptions, maybeOptions);
         }
     }
@@ -264,11 +259,5 @@ export class PolarisEntityManager extends EntityManager {
             await runner.rollbackTransaction();
             throw err;
         }
-    }
-
-    private calculateCriteria<Entity>(target: any, includeLinkedOper: boolean, criteria: any) {
-        return target.toString().includes(CommonModel.name)
-            ? this.findHandler.findConditions<Entity>(includeLinkedOper, criteria)
-            : criteria;
     }
 }
