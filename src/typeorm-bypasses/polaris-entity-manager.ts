@@ -130,7 +130,7 @@ export class PolarisEntityManager extends EntityManager {
         if (criteria instanceof PolarisFindOneOptions) {
             return super.findOne(
                 entityClass,
-                this.findHandler.findConditions<Entity>(false, criteria),
+                this.findHandler.findConditions<Entity>(true, criteria),
                 maybeOptions,
             );
         } else {
@@ -145,7 +145,7 @@ export class PolarisEntityManager extends EntityManager {
         if (criteria instanceof PolarisFindManyOptions) {
             return super.find(
                 entityClass,
-                this.findHandler.findConditions<Entity>(false, criteria),
+                this.findHandler.findConditions<Entity>(true, criteria),
             );
         } else {
             return super.find(entityClass, criteria);
