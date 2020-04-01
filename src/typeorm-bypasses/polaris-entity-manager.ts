@@ -110,9 +110,7 @@ export class PolarisEntityManager extends EntityManager {
             return this.wrapTransaction(async () => {
                 criteria.context = criteria.context || {};
                 await this.dataVersionHandler.updateDataVersion(criteria.context);
-                if (
-                    this.connection.options.extra?.config?.allowSoftDelete === false
-                ) {
+                if (this.connection.options.extra?.config?.allowSoftDelete === false) {
                     return super.delete(targetOrEntity, criteria.criteria);
                 }
                 return this.softDeleteHandler.softDeleteRecursive(targetOrEntity, criteria);
@@ -143,10 +141,7 @@ export class PolarisEntityManager extends EntityManager {
         criteria?: PolarisFindManyOptions<Entity> | any,
     ): Promise<Entity[]> {
         if (criteria instanceof PolarisFindManyOptions) {
-            return super.find(
-                entityClass,
-                this.findHandler.findConditions<Entity>(true, criteria),
-            );
+            return super.find(entityClass, this.findHandler.findConditions<Entity>(true, criteria));
         } else {
             return super.find(entityClass, criteria);
         }
@@ -171,9 +166,7 @@ export class PolarisEntityManager extends EntityManager {
         maybeEntityOrOptions?: PolarisSaveOptions<Entity, T> | any,
         maybeOptions?: any,
     ): Promise<T | T[]> {
-        if (
-            maybeEntityOrOptions instanceof PolarisSaveOptions
-        ) {
+        if (maybeEntityOrOptions instanceof PolarisSaveOptions) {
             return this.wrapTransaction(async () => {
                 maybeEntityOrOptions.context = maybeEntityOrOptions.context || {};
                 await this.dataVersionHandler.updateDataVersion(maybeEntityOrOptions.context);
