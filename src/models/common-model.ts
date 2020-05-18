@@ -19,13 +19,13 @@ export abstract class CommonModel {
     protected createdBy?: string;
 
     @CreateDateColumn()
-    protected creationTime: Date;
+    protected creationDate: Date;
 
     @Column({ nullable: true })
     protected lastUpdatedBy?: string;
 
     @UpdateDateColumn()
-    protected lastUpdateTime: Date;
+    protected lastUpdateDate: Date;
 
     @Column()
     protected deleted: boolean = false;
@@ -45,7 +45,7 @@ export abstract class CommonModel {
     }
 
     public getCreationTime(): Date {
-        return this.creationTime;
+        return this.creationDate;
     }
 
     public getLastUpdatedBy(): string | undefined {
@@ -53,7 +53,7 @@ export abstract class CommonModel {
     }
 
     public getLastUpdateTime(): Date {
-        return this.lastUpdateTime;
+        return this.lastUpdateDate;
     }
 
     public getDeleted(): boolean {
@@ -71,16 +71,16 @@ export abstract class CommonModel {
         this.createdBy = createdBy;
     }
 
-    public setCreationTime(creationTime: Date): void {
-        this.creationTime = creationTime;
+    public setCreationTime(creationDate: Date): void {
+        this.creationDate = creationDate;
     }
 
     public setLastUpdatedBy(lastUpdatedBy?: string): void {
         this.lastUpdatedBy = lastUpdatedBy;
     }
 
-    public setLastUpdateTime(lastUpdateTime: Date): void {
-        this.lastUpdateTime = lastUpdateTime;
+    public setLastUpdateTime(lastUpdateDate: Date): void {
+        this.lastUpdateDate = lastUpdateDate;
     }
 
     public setDeleted(deleted: boolean): void {
