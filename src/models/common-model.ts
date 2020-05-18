@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, OneToMany, UpdateDateColumn } from 'typeorm';
+import { EntitySecretGroups } from './entity-secret-groups';
 
 export abstract class CommonModel {
     @Column({
@@ -25,7 +26,16 @@ export abstract class CommonModel {
     protected lastUpdatedBy?: string;
 
     @UpdateDateColumn()
-    protected lastUpdateDate: Date;
+    protected lastUpdateTime: Date;
+
+    @Column()
+    protected classification: string;
+
+    @OneToMany(
+        () => EntitySecretGroups,
+        entity => entity.secretGroups,
+    )
+    protected secretGroups: Set<string>;
 
     @Column()
     protected deleted: boolean = false;
@@ -53,7 +63,7 @@ export abstract class CommonModel {
     }
 
     public getLastUpdateTime(): Date {
-        return this.lastUpdateDate;
+        return this.lastUpdateTime;
     }
 
     public getDeleted(): boolean {
@@ -79,8 +89,8 @@ export abstract class CommonModel {
         this.lastUpdatedBy = lastUpdatedBy;
     }
 
-    public setLastUpdateTime(lastUpdateDate: Date): void {
-        this.lastUpdateDate = lastUpdateDate;
+    public setLastUpdateTime(lastUpdateTime: Date): void {
+        this.lastUpdateTime = lastUpdateTime;
     }
 
     public setDeleted(deleted: boolean): void {
