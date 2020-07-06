@@ -37,13 +37,11 @@ export class PolarisEntityManager extends EntityManager {
 
     private static setUpnOfEntity(entity: any, context: any) {
         if (context.requestHeaders) {
-            if (entity.creationTime !== undefined) {
-                entity.createdBy =
-                    context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
-            } else {
-                entity.lastUpdatedBy =
-                    context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
+            const id = context.requestHeaders.upn || context.requestHeaders.requestingSystemId;
+            if (entity.lastUpdateTime == null) {
+                entity.createdBy = id;
             }
+            entity.lastUpdatedBy = id;
         }
     }
     public dataVersionHandler: DataVersionHandler;
