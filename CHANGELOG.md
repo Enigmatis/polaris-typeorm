@@ -1,3 +1,124 @@
+## [2.3.4](https://github.com/Enigmatis/polaris-typeorm/compare/v2.3.3...v2.3.4) (2020-04-20)
+
+
+### Bug Fixes
+
+* change get connection for reality to rely on given instance ([936acf2](https://github.com/Enigmatis/polaris-typeorm/commit/936acf2e68c7b64d32d79c843722d64406698873))
+
+## [2.3.3](https://github.com/Enigmatis/polaris-typeorm/compare/v2.3.2...v2.3.3) (2020-04-20)
+
+
+### Bug Fixes
+
+* export polarisconnectionmanager ([849bd62](https://github.com/Enigmatis/polaris-typeorm/commit/849bd621bdc6fc740eae694b7975e5e872eef7be))
+
+## [2.3.2](https://github.com/Enigmatis/polaris-typeorm/compare/v2.3.1...v2.3.2) (2020-04-20)
+
+
+### Bug Fixes
+
+* export polarisconnectionmanager ([ef7db50](https://github.com/Enigmatis/polaris-typeorm/commit/ef7db50b72b8f837a249d892d8a35ac196ea677b))
+
+## [2.3.1](https://github.com/Enigmatis/polaris-typeorm/compare/v2.3.0...v2.3.1) (2020-04-01)
+
+
+### Bug Fixes
+
+* bug fix ([72f5dd3](https://github.com/Enigmatis/polaris-typeorm/commit/72f5dd39dfffbc5fa7ebe0f556bd74716f8ccc47))
+* fix code review ([beaf1c0](https://github.com/Enigmatis/polaris-typeorm/commit/beaf1c0c62d44c21cbddf76a7187e86d75f24177))
+* fixed true ([047217e](https://github.com/Enigmatis/polaris-typeorm/commit/047217ef54bf010f23f53c8d4a502303bb674b0c))
+* updated branch ([1caad74](https://github.com/Enigmatis/polaris-typeorm/commit/1caad74dd2c1b4916cebd736a77e3921f2287283))
+
+# [2.3.0](https://github.com/Enigmatis/polaris-typeorm/compare/v2.2.0...v2.3.0) (2020-04-01)
+
+
+### Features
+
+* added getConnectionForReality function ([3e0500e](https://github.com/Enigmatis/polaris-typeorm/commit/3e0500e061628a835a2725761274f20e87845744))
+
+# [2.2.0](https://github.com/Enigmatis/polaris-typeorm/compare/v2.1.2...v2.2.0) (2020-03-29)
+
+
+### Bug Fixes
+
+* **package:** updated jest version ([64ae49c](https://github.com/Enigmatis/polaris-typeorm/commit/64ae49c1b01df7083172ee1bcdef04aa4904024a))
+
+
+### Features
+
+* **snapshot:** added snapshot page entity ([2462d91](https://github.com/Enigmatis/polaris-typeorm/commit/2462d917f1e9ead89f7206054908f0ace32ffdf9))
+
+## [2.1.2](https://github.com/Enigmatis/polaris-typeorm/compare/v2.1.1...v2.1.2) (2020-03-24)
+
+
+### Bug Fixes
+
+* **package:** updated dependencies ([7ee090d](https://github.com/Enigmatis/polaris-typeorm/commit/7ee090db9b373acd6d63f4ed69525d37b7cd04b9))
+
+## [2.1.1](https://github.com/Enigmatis/polaris-typeorm/compare/v2.1.0...v2.1.1) (2020-03-19)
+
+
+### Bug Fixes
+
+* delete finally works with sqlite (not done yet) ([62e89d8](https://github.com/Enigmatis/polaris-typeorm/commit/62e89d88422fa59caf6d251c6b6e5d43432ff722))
+* delete now works with all drivers ([5bbb2b2](https://github.com/Enigmatis/polaris-typeorm/commit/5bbb2b272e7f74088d70bfcb2d6c9373b5a43ea9))
+* fix build and review ([ae23aa5](https://github.com/Enigmatis/polaris-typeorm/commit/ae23aa509b2cd71737dd86f933389e0cbc388891))
+* now update works ([55b5fee](https://github.com/Enigmatis/polaris-typeorm/commit/55b5fee70d4f7d610b166801594c7e38cbc14209))
+
+# [2.1.0](https://github.com/Enigmatis/polaris-typeorm/compare/v2.0.3...v2.1.0) (2020-03-08)
+
+
+### Features
+
+* added hasRepository method ([de029d1](https://github.com/Enigmatis/polaris-typeorm/commit/de029d14fe7c3f0d78529e3602801ccffb57d16e))
+* added hasRepository method ([150fe59](https://github.com/Enigmatis/polaris-typeorm/commit/150fe590bab10d53b0bd8529491cfa0301242ae1))
+
+## [2.0.3](https://github.com/Enigmatis/polaris-typeorm/compare/v2.0.2...v2.0.3) (2020-03-03)
+
+
+### Bug Fixes
+
+* createdBy is set when saving a new entity ([1f2d1f5](https://github.com/Enigmatis/polaris-typeorm/commit/1f2d1f53000dcc3da826d6a35a799807f2cc2409))
+
+## [2.0.2](https://github.com/Enigmatis/polaris-typeorm/compare/v2.0.1...v2.0.2) (2020-03-03)
+
+
+### Bug Fixes
+
+* types ([05d5f76](https://github.com/Enigmatis/polaris-typeorm/commit/05d5f7646e7c10b644081b224ffff905874cb89f))
+* types ([70417c8](https://github.com/Enigmatis/polaris-typeorm/commit/70417c8641a93b766d86984e10295b542192d06e))
+
+## [2.0.1](https://github.com/Enigmatis/polaris-typeorm/compare/v2.0.0...v2.0.1) (2020-03-02)
+
+
+### Bug Fixes
+
+* package-lock.json ([99e7d67](https://github.com/Enigmatis/polaris-typeorm/commit/99e7d67858019910889c95d778ca0a5ea91cc534))
+
+# [2.0.0](https://github.com/Enigmatis/polaris-typeorm/compare/v1.1.15...v2.0.0) (2020-02-27)
+
+
+### Bug Fixes
+
+* chaining ([ef17b19](https://github.com/Enigmatis/polaris-typeorm/commit/ef17b195f2311858c58fbb117ec12a8ea0a74a52))
+* connection manager set from create in connection manager ([c3f257e](https://github.com/Enigmatis/polaris-typeorm/commit/c3f257e843490dfcf42cd887b0f4672ed9acdc7d))
+* id field in no longer a field of common-model.ts ([c254f3e](https://github.com/Enigmatis/polaris-typeorm/commit/c254f3e3091e896f1f7bf8dbe3a81d724123bb13))
+* name changes ([16077f3](https://github.com/Enigmatis/polaris-typeorm/commit/16077f3495e2d960f827f2dc51a1d7e718aa3c9b))
+* npm update ([21d5b96](https://github.com/Enigmatis/polaris-typeorm/commit/21d5b96d87ef2e8a2e4564c0593177c6084c0649))
+* npm update ([84347dc](https://github.com/Enigmatis/polaris-typeorm/commit/84347dc1d4ae176babed304691482f4a01ad2476))
+* tslint changes ([d42bfea](https://github.com/Enigmatis/polaris-typeorm/commit/d42bfeae33b2799e41a2a9d921c2a6a408d6b0af))
+* types in polaris ([446fa18](https://github.com/Enigmatis/polaris-typeorm/commit/446fa184879906979902f95dea13cbf9cf0e5b04))
+* types in polaris ([1812264](https://github.com/Enigmatis/polaris-typeorm/commit/181226439aff8a07538bc92241d64d2d558228c5))
+* types in polaris ([790b808](https://github.com/Enigmatis/polaris-typeorm/commit/790b808f772c7a11ddaca4117603d4c349513d08))
+
+
+* refactor: ([35c2d94](https://github.com/Enigmatis/polaris-typeorm/commit/35c2d94e2e331141a8e11e3073c6eca0768d6e6b))
+
+
+### BREAKING CHANGES
+
+* polaris types
+
 ## [1.1.15](https://github.com/Enigmatis/polaris-typeorm/compare/v1.1.14...v1.1.15) (2020-02-16)
 
 
