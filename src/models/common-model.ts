@@ -9,26 +9,29 @@ export abstract class CommonModel {
     protected dataVersion: number;
 
     @Column({
-        name: 'realityId',
+        name: 'REALITYID',
         type: 'real',
         default: 0,
     })
     protected realityId: number;
 
-    @Column({ nullable: true })
+    @Column({ name: 'CREATEDBY', nullable: true })
     protected createdBy?: string;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ name: 'CREATIONDATE' })
     protected creationTime: Date;
 
-    @Column({ nullable: true })
+    @Column({ name: 'LASTUPDATEDBY', nullable: true })
     protected lastUpdatedBy?: string;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({ name: 'LASTUPDATEDATE' })
     protected lastUpdateTime: Date;
 
-    @Column()
+    @Column({ name: 'DELETED' })
     protected deleted: boolean = false;
+
+    @Column({ name: 'CLASSIFICATION', nullable: true })
+    protected classification: string;
 
     public abstract getId(): string;
 
