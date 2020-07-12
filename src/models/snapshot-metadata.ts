@@ -82,7 +82,7 @@ export class SnapshotMetadata {
         this.dataVersion = dataVersion;
     }
 
-    public setLastAccessedTie(lastAccessed: Date): void {
+    public setLastAccessedTime(lastAccessed: Date): void {
         this.lastAccessed = lastAccessed;
     }
 
