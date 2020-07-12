@@ -8,31 +8,31 @@ export class SnapshotMetadata {
     @CreateDateColumn()
     private lastAccessed: Date;
 
-    @Column()
+    @Column("text", { array: true })
     private pagesIds: string[];
 
-    @Column()
-    private pagesCount: number;
+    @Column({nullable: true})
+    private totalPagesCount: number;
 
-    @Column()
-    private currentPageIndex: number;
+    @Column({nullable: true})
+    private currentPageCount: number;
 
     @Column()
     private status: SnapshotStatus;
 
-    @Column()
+    @Column({nullable: true})
     private irrelevantEntities: string;
 
-    @Column()
-    private dataVersion: BigInt;
+    @Column({nullable: true})
+    private dataVersion: number;
 
-    @Column()
+    @Column({nullable: true})
     private totalCount: number;
 
-    @Column()
+    @Column({nullable: true})
     private warnings: string;
 
-    @Column()
+    @Column({nullable: true})
     private errors: string;
 
     @CreateDateColumn()
@@ -40,7 +40,13 @@ export class SnapshotMetadata {
 
     constructor() {
         this.status = SnapshotStatus.IN_PROGRESS;
-        this.currentPageIndex = 0;
+        this.currentPageCount = 0;
+        this.totalPagesCount = 0;
+        this.irrelevantEntities = '';
+        this.warnings = '';
+        this.errors = '';
+        this.pagesIds = [];
+        this.creationTime = new Date();
         this.lastAccessed = new Date();
     }
 
@@ -48,15 +54,12 @@ export class SnapshotMetadata {
         return this.id;
     }
 
-    public setCurrentPageIndex(currentPageIndex: number): void {
-        this.currentPageIndex = currentPageIndex;
+    public setCurrentPageCount(currentPageCount: number): void {
+        this.currentPageCount = currentPageCount;
     }
 
-    public addPageId(pageId: string): void {
-        if (!this.pagesIds) {
-            this.pagesIds = [];
-        }
-        this.pagesIds.push(pageId);
+    public setPageIds(pageIds: string[]): void {
+        this.pagesIds = pageIds;
     }
 
     public addWarnings(warnings: string): void {
@@ -75,7 +78,7 @@ export class SnapshotMetadata {
         this.status = snapshotStatus;
     }
 
-    public setDataVersion(dataVersion: BigInt): void {
+    public setDataVersion(dataVersion: number): void {
         this.dataVersion = dataVersion;
     }
 
@@ -87,8 +90,12 @@ export class SnapshotMetadata {
         this.totalCount = totalCount;
     }
 
-    public getPagesCount(): number {
-        return this.pagesCount;
+    public setTotalPagesCount(totalPagesCount: number): void {
+        this.totalPagesCount = totalPagesCount;
+    }
+
+    public getTotalPagesCount(): number {
+        return this.totalPagesCount;
     }
 
     public getCreationTime(): Date {
@@ -97,6 +104,10 @@ export class SnapshotMetadata {
 
     public getLastAccessedTime(): Date {
         return this.lastAccessed;
+    }
+
+    public getCurrentPageCount(): number {
+        return this.currentPageCount;
     }
 }
 

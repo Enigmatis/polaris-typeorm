@@ -16,7 +16,7 @@ describe('snapshot page tests', () => {
 
     test('saving snapshot with data, snapshot is saved with requested data', async () => {
         const data: string = 'foo';
-        const snapshotPage: SnapshotPage = new SnapshotPage(data);
+        const snapshotPage: SnapshotPage = new SnapshotPage("id",data);
         await snapshotRepo.save({} as any, snapshotPage);
         const page: SnapshotPage | undefined = await snapshotRepo.findOne(
             {} as any,

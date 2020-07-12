@@ -11,8 +11,9 @@ export class SnapshotPage {
     @CreateDateColumn()
     private readonly creationTime: Date;
 
-    constructor(data: string) {
+    constructor(id: string, data: string) {
         if (data) {
+            this.id = id;
             this.data = Buffer.from(data);
         }
     }
