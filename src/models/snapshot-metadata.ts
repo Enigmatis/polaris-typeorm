@@ -6,33 +6,33 @@ export class SnapshotMetadata {
     private readonly id: string;
 
     @CreateDateColumn()
-    private lastAccessed: Date;
+    private lastAccessedTime: Date;
 
-    @Column("text", { array: true })
+    @Column('text', { array: true })
     private pagesIds: string[];
 
-    @Column({nullable: true})
+    @Column({ nullable: true })
     private totalPagesCount: number;
 
-    @Column({nullable: true})
+    @Column({ nullable: true })
     private currentPageCount: number;
 
-    @Column()
+    @Column('text')
     private status: SnapshotStatus;
 
-    @Column({nullable: true})
+    @Column({ nullable: true })
     private irrelevantEntities: string;
 
-    @Column({nullable: true})
+    @Column({ nullable: true })
     private dataVersion: number;
 
-    @Column({nullable: true})
+    @Column({ nullable: true })
     private totalCount: number;
 
-    @Column({nullable: true})
+    @Column({ nullable: true })
     private warnings: string;
 
-    @Column({nullable: true})
+    @Column({ nullable: true })
     private errors: string;
 
     @CreateDateColumn()
@@ -42,12 +42,9 @@ export class SnapshotMetadata {
         this.status = SnapshotStatus.IN_PROGRESS;
         this.currentPageCount = 0;
         this.totalPagesCount = 0;
-        this.irrelevantEntities = '';
-        this.warnings = '';
-        this.errors = '';
         this.pagesIds = [];
         this.creationTime = new Date();
-        this.lastAccessed = new Date();
+        this.lastAccessedTime = new Date();
     }
 
     public getId(): string {
@@ -62,16 +59,26 @@ export class SnapshotMetadata {
         this.pagesIds = pageIds;
     }
 
-    public addWarnings(warnings: string): void {
-        this.warnings = this.warnings.concat(warnings);
+    public addWarnings(warningsToAdd: string): void {
+        if (warningsToAdd) {
+            if (!this.warnings) {
+                this.warnings = '';
+            }
+            this.warnings = this.warnings.concat(warningsToAdd);
+        }
     }
 
-    public addErrors(errors: string): void {
-        this.errors = this.errors.concat(errors);
+    public addErrors(errorsToAdd: string): void {
+        if (errorsToAdd) {
+            if (!this.errors) {
+                this.errors = '';
+            }
+            this.errors = this.errors.concat(errorsToAdd);
+        }
     }
 
-    public addIrrelevantEntities(irrelevantEntities: string): void {
-        this.irrelevantEntities.concat(irrelevantEntities);
+    public setIrrelevantEntities(irrelevantEntities: string): void {
+        this.irrelevantEntities = irrelevantEntities;
     }
 
     public setSnapshotStatus(snapshotStatus: SnapshotStatus): void {
@@ -83,7 +90,7 @@ export class SnapshotMetadata {
     }
 
     public setLastAccessedTime(lastAccessed: Date): void {
-        this.lastAccessed = lastAccessed;
+        this.lastAccessedTime = lastAccessed;
     }
 
     public setTotalCount(totalCount: number): void {
@@ -103,7 +110,7 @@ export class SnapshotMetadata {
     }
 
     public getLastAccessedTime(): Date {
-        return this.lastAccessed;
+        return this.lastAccessedTime;
     }
 
     public getCurrentPageCount(): number {
@@ -112,7 +119,7 @@ export class SnapshotMetadata {
 }
 
 export enum SnapshotStatus {
-    IN_PROGRESS,
-    DONE,
-    FAILED,
+    IN_PROGRESS = <any>'IN_PROGRESS',
+    DONE = <any>'DONE',
+    FAILED = <any>'FAILED',
 }
