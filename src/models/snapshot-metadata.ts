@@ -12,10 +12,10 @@ export class SnapshotMetadata {
     private pagesIds: string[];
 
     @Column({ nullable: true })
-    private totalPagesCount: number;
+    private pagesCount: number;
 
     @Column({ nullable: true })
-    private currentPageCount: number;
+    private currentPageIndex: number;
 
     @Column('text')
     private status: SnapshotStatus;
@@ -40,8 +40,8 @@ export class SnapshotMetadata {
 
     constructor() {
         this.status = SnapshotStatus.IN_PROGRESS;
-        this.currentPageCount = 0;
-        this.totalPagesCount = 0;
+        this.currentPageIndex = 0;
+        this.pagesCount = 0;
         this.pagesIds = [];
         this.creationTime = new Date();
         this.lastAccessedTime = new Date();
@@ -51,8 +51,8 @@ export class SnapshotMetadata {
         return this.id;
     }
 
-    public setCurrentPageCount(currentPageCount: number): void {
-        this.currentPageCount = currentPageCount;
+    public setCurrentPageIndex(currentPageIndex: number): void {
+        this.currentPageIndex = currentPageIndex;
     }
 
     public setPageIds(pageIds: string[]): void {
@@ -97,12 +97,12 @@ export class SnapshotMetadata {
         this.totalCount = totalCount;
     }
 
-    public setTotalPagesCount(totalPagesCount: number): void {
-        this.totalPagesCount = totalPagesCount;
+    public setPagesCount(pagesCount: number): void {
+        this.pagesCount = pagesCount;
     }
 
-    public getTotalPagesCount(): number {
-        return this.totalPagesCount;
+    public getPagesCount(): number {
+        return this.pagesCount;
     }
 
     public getCreationTime(): Date {
@@ -113,8 +113,12 @@ export class SnapshotMetadata {
         return this.lastAccessedTime;
     }
 
-    public getCurrentPageCount(): number {
-        return this.currentPageCount;
+    public getCurrentPageIndex(): number {
+        return this.currentPageIndex;
+    }
+
+    public getStatus(): SnapshotStatus {
+        return this.status;
     }
 }
 
