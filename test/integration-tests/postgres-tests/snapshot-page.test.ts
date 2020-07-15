@@ -1,4 +1,4 @@
-import { PolarisConnection, PolarisRepository, SnapshotPage } from '../../../src';
+import {PolarisConnection, PolarisRepository, SnapshotPage, SnapshotStatus} from '../../../src';
 import { setUpTestConnection } from '../utils/set-up';
 
 describe('snapshot page tests', () => {
@@ -16,7 +16,8 @@ describe('snapshot page tests', () => {
 
     test('saving snapshot with data, snapshot is saved with requested data', async () => {
         const data: string = 'foo';
-        const snapshotPage: SnapshotPage = new SnapshotPage("id",data);
+        const snapshotPage: SnapshotPage = new SnapshotPage("id");
+        snapshotPage.setData("data");
         await snapshotRepo.save({} as any, snapshotPage);
         const page: SnapshotPage | undefined = await snapshotRepo.findOne(
             {} as any,
@@ -25,5 +26,6 @@ describe('snapshot page tests', () => {
         expect(page).toBeDefined();
         expect(page).not.toBeNull();
         expect(page!.getData()).toBe(data);
+        expect(page!.getStatus()).toBe(SnapshotStatus.IN_PROGRESS);
     });
 });

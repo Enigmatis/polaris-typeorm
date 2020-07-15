@@ -1,21 +1,24 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {Column, CreateDateColumn, Entity, PrimaryGeneratedColumn} from 'typeorm';
+import {SnapshotStatus} from "./snapshot-metadata";
 
 @Entity()
 export class SnapshotPage {
     @PrimaryGeneratedColumn('uuid')
     private readonly id: string;
 
-    @Column('bytea')
-    private readonly data: Buffer;
+    @Column('bytea', {nullable: true})
+    private data: Buffer;
 
     @CreateDateColumn()
-    private readonly creationTime: Date;
+    private lastAccessedTime: Date;
 
-    constructor(id: string, data: string) {
-        if (data) {
-            this.id = id;
-            this.data = Buffer.from(data);
-        }
+    @Column('text')
+    private status: SnapshotStatus;
+
+    constructor(id: string) {
+        this.id = id;
+        this.status = SnapshotStatus.IN_PROGRESS;
+        this.lastAccessedTime = new Date();
     }
 
     public getId(): string {
@@ -23,10 +26,26 @@ export class SnapshotPage {
     }
 
     public getData(): string {
-        return this.data.toString();
+        return this.data?.toString();
     }
 
-    public getCreationTime(): Date {
-        return this.creationTime;
+    public getStatus(): SnapshotStatus {
+        return this.status;
+    }
+
+    public getLastAccessedTime(): Date {
+        return this.lastAccessedTime;
+    }
+
+    public setLastAccessedTime(lastAccessedTime: Date): void {
+        this.lastAccessedTime = lastAccessedTime;
+    }
+
+    public setStatus(status: SnapshotStatus): void {
+        this.status = status;
+    }
+
+    public setData(data: string): void {
+        this.data = Buffer.from(data);
     }
 }
