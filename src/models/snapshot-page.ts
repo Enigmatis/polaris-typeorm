@@ -1,4 +1,4 @@
-import {Column, CreateDateColumn, Entity, PrimaryGeneratedColumn} from 'typeorm';
+import {Column, Entity, PrimaryGeneratedColumn, UpdateDateColumn} from 'typeorm';
 import {SnapshotStatus} from "./snapshot-metadata";
 
 @Entity()
@@ -9,7 +9,7 @@ export class SnapshotPage {
     @Column('bytea', {nullable: true})
     private data: Buffer;
 
-    @CreateDateColumn()
+    @UpdateDateColumn()
     private lastAccessedTime: Date;
 
     @Column('text')
@@ -18,7 +18,6 @@ export class SnapshotPage {
     constructor(id: string) {
         this.id = id;
         this.status = SnapshotStatus.IN_PROGRESS;
-        this.lastAccessedTime = new Date();
     }
 
     public getId(): string {
