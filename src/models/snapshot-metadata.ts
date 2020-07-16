@@ -1,11 +1,11 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn} from 'typeorm';
 
 @Entity()
 export class SnapshotMetadata {
     @PrimaryGeneratedColumn('uuid')
     private readonly id: string;
 
-    @CreateDateColumn()
+    @UpdateDateColumn()
     private lastAccessedTime: Date;
 
     @Column('text', { array: true })
@@ -115,6 +115,10 @@ export class SnapshotMetadata {
 
     public getCurrentPageIndex(): number {
         return this.currentPageIndex;
+    }
+
+    public getPagesIds(): string[] {
+        return this.pagesIds;
     }
 
     public getStatus(): SnapshotStatus {
