@@ -22,7 +22,11 @@ describe('polaris entity manager', () => {
         logger = await new PolarisLogger(loggerConfig, applicationLogProperties);
         connection = await createPolarisConnection(connectionOptions, logger);
         testConnection = await createPolarisConnection(
-            { ...connectionOptions, name: 'chen', schema: 'chen' } as ConnectionOptions,
+            {
+                ...connectionOptions,
+                name: process.env.NEW_SCHEMA,
+                schema: process.env.NEW_SCHEMA,
+            } as ConnectionOptions,
             logger,
         );
         bookRepo = connection.getRepository(Book);
@@ -58,10 +62,14 @@ describe('polaris entity manager', () => {
         it('delete book on new connection, dont get it on previous connection', async () => {
             const book = new Book(bookTitle);
             await bookRepo.save(context, [book]);
-            const bookBeforeDelete = await bookRepo.findOne(context, { where: { title: bookTitle } });
+            const bookBeforeDelete = await bookRepo.findOne(context, {
+                where: { title: bookTitle },
+            });
             expect(bookBeforeDelete).toEqual(book);
             await testBookRepo.delete(context, book.getId());
-            const bookAfterDelete = await bookRepo.findOne(context, { where: { id: book.getId() } });
+            const bookAfterDelete = await bookRepo.findOne(context, {
+                where: { id: book.getId() },
+            });
             expect(bookAfterDelete).toBeUndefined();
         });
         it('create book on previous connection, find it on new connection', async () => {

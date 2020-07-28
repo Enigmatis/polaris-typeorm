@@ -107,7 +107,7 @@ export class PolarisEntityManager extends EntityManager {
             return this.wrapTransaction(async () => {
                 const { context } = criteria;
                 await this.dataVersionHandler.updateDataVersion(context, this.connection);
-                if (context.reality.name) {
+                if (context?.reality?.name) {
                     this.changeSchema(targetOrEntity, context.reality.name);
                 }
                 if (this.connection.options.extra?.config?.allowSoftDelete === false) {
@@ -126,7 +126,7 @@ export class PolarisEntityManager extends EntityManager {
         maybeOptions?: FindOneOptions<Entity>,
     ): Promise<Entity | undefined> {
         if (criteria instanceof PolarisFindOneOptions) {
-            if (criteria.context.reality.name) {
+            if (criteria?.context?.reality?.name) {
                 this.changeSchema(entityClass, criteria.context.reality.name);
             }
             return super.findOne(
@@ -144,7 +144,7 @@ export class PolarisEntityManager extends EntityManager {
         criteria?: PolarisFindManyOptions<Entity> | any,
     ): Promise<Entity[]> {
         if (criteria instanceof PolarisFindManyOptions) {
-            if (criteria.context.reality.name) {
+            if (criteria?.context?.reality?.name) {
                 this.changeSchema(entityClass, criteria.context.reality.name);
             }
             return super.find(entityClass, this.findHandler.findConditions<Entity>(true, criteria));
@@ -158,7 +158,7 @@ export class PolarisEntityManager extends EntityManager {
         criteria?: PolarisFindManyOptions<Entity> | any,
     ): Promise<number> {
         if (criteria instanceof PolarisFindManyOptions) {
-            if (criteria.context.reality.name) {
+            if (criteria?.context?.reality?.name) {
                 this.changeSchema(entityClass, criteria.context.reality.name);
             }
             return super.count(
@@ -178,8 +178,8 @@ export class PolarisEntityManager extends EntityManager {
         if (maybeEntityOrOptions instanceof PolarisSaveOptions) {
             return this.wrapTransaction(async () => {
                 const { context } = maybeEntityOrOptions;
-                if (context.reality.name) {
-                    this.changeSchema(targetOrEntity, context.reality.name);
+                if (context?.reality?.name) {
+                    this.changeSchema(targetOrEntity, context?.reality?.name);
                 }
                 await this.dataVersionHandler.updateDataVersion(context, this.connection);
                 await PolarisEntityManager.setInfoOfCommonModel(
@@ -199,8 +199,8 @@ export class PolarisEntityManager extends EntityManager {
         partialEntity: any,
     ): Promise<UpdateResult> {
         return this.wrapTransaction(async () => {
-            if (criteria.context.reality.name) {
-                this.changeSchema(target, criteria.context.reality.name);
+            if (criteria?.context?.reality?.name) {
+                this.changeSchema(target, criteria.context?.reality?.name);
             }
             let updateCriteria = criteria;
             if (criteria instanceof PolarisCriteria) {

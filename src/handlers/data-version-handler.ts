@@ -6,7 +6,7 @@ export class DataVersionHandler {
         context: PolarisGraphQLContext,
         connection: PolarisConnection,
     ) {
-        if (context.reality.name) {
+        if (context?.reality?.name) {
             connection.manager.changeSchema(DataVersion, context.reality.name);
         }
         const extensions: PolarisExtensions = (context && context.returnedExtensions) || {};
