@@ -14,8 +14,8 @@ describe('data version handler tests', () => {
         } as any;
         const context = { returnedExtensions: {} } as PolarisGraphQLContext;
         Object.assign(connection.manager.connection, connection);
-        const dataVersionHandler: DataVersionHandler = new DataVersionHandler(connection.manager);
-        await dataVersionHandler.updateDataVersion(context);
+        const dataVersionHandler: DataVersionHandler = new DataVersionHandler();
+        await dataVersionHandler.updateDataVersion(context, connection);
         expect(connection.manager.save).toBeCalledWith(DataVersion, new DataVersion(1));
         expect(context.returnedExtensions.globalDataVersion).toEqual(1);
     });
@@ -36,8 +36,8 @@ describe('data version handler tests', () => {
             returnedExtensions: {},
         } as PolarisGraphQLContext;
         Object.assign(connection.manager.connection, connection);
-        const dataVersionHandler: DataVersionHandler = new DataVersionHandler(connection.manager);
-        await dataVersionHandler.updateDataVersion(context);
+        const dataVersionHandler: DataVersionHandler = new DataVersionHandler();
+        await dataVersionHandler.updateDataVersion(context, connection);
         expect(connection.manager.increment).toBeCalledWith(DataVersion, {}, 'value', 1);
         expect(context.returnedExtensions.globalDataVersion).toEqual(2);
     });
@@ -54,9 +54,9 @@ describe('data version handler tests', () => {
         const context = { returnedExtensions: { globalDataVersion: 1 } } as PolarisGraphQLContext;
 
         Object.assign(connection.manager.connection, connection);
-        const dataVersionHandler: DataVersionHandler = new DataVersionHandler(connection.manager);
+        const dataVersionHandler: DataVersionHandler = new DataVersionHandler();
         try {
-            await dataVersionHandler.updateDataVersion(context);
+            await dataVersionHandler.updateDataVersion(context, connection);
         } catch (e) {
             expect(e.message).toEqual(
                 'data version in context even though the data version table is empty',
@@ -76,9 +76,9 @@ describe('data version handler tests', () => {
         } as any;
         const context = { returnedExtensions: { globalDataVersion: 1 } } as PolarisGraphQLContext;
         Object.assign(connection.manager.connection, connection);
-        const dataVersionHandler: DataVersionHandler = new DataVersionHandler(connection.manager);
+        const dataVersionHandler: DataVersionHandler = new DataVersionHandler();
         try {
-            await dataVersionHandler.updateDataVersion(context);
+            await dataVersionHandler.updateDataVersion(context, connection);
         } catch (err) {
             expect(err.message).toEqual(
                 'data version in context does not equal data version in table',
@@ -99,8 +99,8 @@ describe('data version handler tests', () => {
         const context = { returnedExtensions: { globalDataVersion: 1 } } as PolarisGraphQLContext;
 
         Object.assign(connection.manager.connection, connection);
-        const dataVersionHandler: DataVersionHandler = new DataVersionHandler(connection.manager);
-        await dataVersionHandler.updateDataVersion(context);
+        const dataVersionHandler: DataVersionHandler = new DataVersionHandler();
+        await dataVersionHandler.updateDataVersion(context, connection);
         expect(connection.manager.increment).not.toHaveBeenCalled();
         expect(context.returnedExtensions.globalDataVersion).toEqual(1);
     });
