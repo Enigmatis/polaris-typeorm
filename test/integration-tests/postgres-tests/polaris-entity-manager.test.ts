@@ -100,10 +100,9 @@ describe('polaris entity manager', () => {
                 ' creating them on the schema in the contextWithRealityName',
             async () => {
                 const book2 = new Book(bookTitle + ' 2');
-                const context = generateContext();
-                await testBookRepo.save(context, [book]);
-                await bookRepo.save(context, [book2]);
-                const bookFromSchema = await testBookRepo.findOne(context, {
+                await testBookRepo.save(generateContext(), [book]);
+                await bookRepo.save(generateContext(), [book2]);
+                const bookFromSchema = await testBookRepo.findOne(generateContext(), {
                     where: { id: book.getId() },
                 });
                 const bookFromNewSchema = await testBookRepo.findOne(contextWithRealityName, {
