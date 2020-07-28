@@ -24,8 +24,8 @@ describe('polaris entity manager', () => {
         testConnection = await createPolarisConnection(
             {
                 ...connectionOptions,
-                name: process.env.NEW_SCHEMA,
-                schema: process.env.NEW_SCHEMA,
+                name: process.env.NEW_SCHEMA_NAME,
+                schema: process.env.NEW_SCHEMA_NAME,
             } as ConnectionOptions,
             logger,
         );
