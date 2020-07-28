@@ -14,9 +14,10 @@ let logger: PolarisLogger;
 let connection: PolarisConnection;
 let testConnection: PolarisConnection;
 let bookRepo: PolarisRepository<Book>;
+let book: Book;
 let testBookRepo: PolarisRepository<Book>;
 const bookTitle = 'the bible';
-let context: PolarisGraphQLContext;
+let contextWithRealityName: PolarisGraphQLContext;
 describe('polaris entity manager', () => {
     beforeEach(async () => {
         logger = await new PolarisLogger(loggerConfig, applicationLogProperties);
@@ -31,8 +32,9 @@ describe('polaris entity manager', () => {
         );
         bookRepo = connection.getRepository(Book);
         testBookRepo = testConnection.getRepository(Book);
-        context = generateContext();
-        context.reality = { id: 0, name: process.env.SCHEMA_NAME };
+        contextWithRealityName = generateContext();
+        contextWithRealityName.reality = { id: 0, name: process.env.SCHEMA_NAME };
+        book = new Book(bookTitle);
     });
     afterEach(async () => {
         await connection.close();
@@ -41,18 +43,18 @@ describe('polaris entity manager', () => {
 
     describe('schema is changed by reality name in context', () => {
         it('save book on new connection, get it on previous connection', async () => {
-            const book = new Book(bookTitle);
-            await testBookRepo.save(context, [book]);
-            const book2 = await bookRepo.findOne(context, { where: { title: bookTitle } });
+            await testBookRepo.save(contextWithRealityName, [book]);
+            const book2 = await bookRepo.findOne(contextWithRealityName, {
+                where: { title: bookTitle },
+            });
             expect(book2).toEqual(book);
         });
 
         it('update book on new connection, get it on previous connection', async () => {
-            const book = new Book(bookTitle);
-            await bookRepo.save(context, [book]);
+            await bookRepo.save(contextWithRealityName, [book]);
             const newTitle = 'why man love bitches';
-            await testBookRepo.update(context, book.getId(), { title: newTitle });
-            const bookAfterUpdate = await bookRepo.find(context, {
+            await testBookRepo.update(contextWithRealityName, book.getId(), { title: newTitle });
+            const bookAfterUpdate = await bookRepo.find(contextWithRealityName, {
                 where: { id: book.getId() },
             });
             expect(bookAfterUpdate).toHaveLength(1);
@@ -60,40 +62,56 @@ describe('polaris entity manager', () => {
         });
 
         it('delete book on new connection, dont get it on previous connection', async () => {
-            const book = new Book(bookTitle);
-            await bookRepo.save(context, [book]);
-            const bookBeforeDelete = await bookRepo.findOne(context, {
+            await bookRepo.save(contextWithRealityName, [book]);
+            const bookBeforeDelete = await bookRepo.findOne(contextWithRealityName, {
                 where: { title: bookTitle },
             });
             expect(bookBeforeDelete).toEqual(book);
-            await testBookRepo.delete(context, book.getId());
-            const bookAfterDelete = await bookRepo.findOne(context, {
+            await testBookRepo.delete(contextWithRealityName, book.getId());
+            const bookAfterDelete = await bookRepo.findOne(contextWithRealityName, {
                 where: { id: book.getId() },
             });
             expect(bookAfterDelete).toBeUndefined();
         });
         it('create book on previous connection, find it on new connection', async () => {
-            const book = new Book(bookTitle);
-            await bookRepo.save(context, [book]);
-            const books = await testBookRepo.find(context, { where: { title: bookTitle } });
+            await bookRepo.save(contextWithRealityName, [book]);
+            const books = await testBookRepo.find(contextWithRealityName, {
+                where: { title: bookTitle },
+            });
             expect(books).toHaveLength(1);
             expect(books[0]).toEqual(book);
         });
         it('create book on previous connection, find one on new connection', async () => {
-            const book = new Book(bookTitle);
-            await bookRepo.save(context, [book]);
-            const bookFromTest = await testBookRepo.findOne(context, {
+            await bookRepo.save(contextWithRealityName, [book]);
+            const bookFromTest = await testBookRepo.findOne(contextWithRealityName, {
                 where: { title: bookTitle },
             });
             expect(bookFromTest).toEqual(book);
         });
         it('create book on previous connection, count books on new connection', async () => {
-            const book = new Book(bookTitle);
-            await bookRepo.save(context, [book]);
-            const bookFromTest = await testBookRepo.count(context, {
+            await bookRepo.save(contextWithRealityName, [book]);
+            const bookFromTest = await testBookRepo.count(contextWithRealityName, {
                 where: { title: bookTitle },
             });
             expect(bookFromTest).toEqual(1);
         });
+        it(
+            'create two books on the test connection with different schemas,' +
+                ' creating them on the schema in the contextWithRealityName',
+            async () => {
+                const book2 = new Book(bookTitle + ' 2');
+                const context = generateContext();
+                await testBookRepo.save(context, [book]);
+                await bookRepo.save(context, [book2]);
+                const bookFromSchema = await testBookRepo.findOne(context, {
+                    where: { id: book.getId() },
+                });
+                const bookFromNewSchema = await testBookRepo.findOne(contextWithRealityName, {
+                    where: { id: book2.getId() },
+                });
+                expect(bookFromSchema?.title).toEqual(book.title);
+                expect(bookFromNewSchema?.title).toEqual(book2.title);
+            },
+        );
     });
 });

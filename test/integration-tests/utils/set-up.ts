@@ -59,6 +59,5 @@ export function generateContext(
     return {
         requestHeaders: headers || {},
         returnedExtensions: extensions || {},
-        reality: { id: 0, name: process.env.SCHEMA_NAME },
     } as PolarisGraphQLContext;
 }
