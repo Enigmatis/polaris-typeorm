@@ -133,7 +133,7 @@ export class SnapshotMetadata {
 }
 
 export enum SnapshotStatus {
-    IN_PROGRESS = 'IN_PROGRESS' as any,
-    DONE = 'DONE' as any,
-    FAILED = 'FAILED' as any,
+    IN_PROGRESS = 'IN_PROGRESS',
+    DONE = 'DONE',
+    FAILED = 'FAILED',
 }

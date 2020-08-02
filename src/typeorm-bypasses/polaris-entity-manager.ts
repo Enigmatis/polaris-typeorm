@@ -11,7 +11,6 @@ import {
 } from 'typeorm';
 import { RepositoryNotFoundError } from 'typeorm/error/RepositoryNotFoundError';
 import {
-    DataVersion,
     PolarisCriteria,
     PolarisFindManyOptions,
     PolarisFindOneOptions,
@@ -107,9 +106,7 @@ export class PolarisEntityManager extends EntityManager {
             return this.wrapTransaction(async () => {
                 const { context } = criteria;
                 await this.dataVersionHandler.updateDataVersion(context, this.connection);
-                if (context?.reality?.name) {
-                    this.changeSchema(targetOrEntity, context.reality.name);
-                }
+                this.changeSchemaFromContext(targetOrEntity, context);
                 if (this.connection.options.extra?.config?.allowSoftDelete === false) {
                     return super.delete(targetOrEntity, criteria.criteria);
                 }
@@ -126,9 +123,7 @@ export class PolarisEntityManager extends EntityManager {
         maybeOptions?: FindOneOptions<Entity>,
     ): Promise<Entity | undefined> {
         if (criteria instanceof PolarisFindOneOptions) {
-            if (criteria?.context?.reality?.name) {
-                this.changeSchema(entityClass, criteria.context.reality.name);
-            }
+            this.changeSchemaFromContext(entityClass, criteria.context);
             return super.findOne(
                 entityClass,
                 this.findHandler.findConditions<Entity>(true, criteria),
@@ -144,9 +139,7 @@ export class PolarisEntityManager extends EntityManager {
         criteria?: PolarisFindManyOptions<Entity> | any,
     ): Promise<Entity[]> {
         if (criteria instanceof PolarisFindManyOptions) {
-            if (criteria?.context?.reality?.name) {
-                this.changeSchema(entityClass, criteria.context.reality.name);
-            }
+            this.changeSchemaFromContext(entityClass, criteria.context);
             return super.find(entityClass, this.findHandler.findConditions<Entity>(true, criteria));
         } else {
             return super.find(entityClass, criteria);
@@ -158,9 +151,7 @@ export class PolarisEntityManager extends EntityManager {
         criteria?: PolarisFindManyOptions<Entity> | any,
     ): Promise<number> {
         if (criteria instanceof PolarisFindManyOptions) {
-            if (criteria?.context?.reality?.name) {
-                this.changeSchema(entityClass, criteria.context.reality.name);
-            }
+            this.changeSchemaFromContext(entityClass, criteria.context);
             return super.count(
                 entityClass,
                 this.findHandler.findConditions<Entity>(false, criteria),
@@ -178,9 +169,7 @@ export class PolarisEntityManager extends EntityManager {
         if (maybeEntityOrOptions instanceof PolarisSaveOptions) {
             return this.wrapTransaction(async () => {
                 const { context } = maybeEntityOrOptions;
-                if (context?.reality?.name) {
-                    this.changeSchema(targetOrEntity, context?.reality?.name);
-                }
+                this.changeSchemaFromContext(targetOrEntity, context);
                 await this.dataVersionHandler.updateDataVersion(context, this.connection);
                 await PolarisEntityManager.setInfoOfCommonModel(
                     context,
@@ -199,9 +188,7 @@ export class PolarisEntityManager extends EntityManager {
         partialEntity: any,
     ): Promise<UpdateResult> {
         return this.wrapTransaction(async () => {
-            if (criteria?.context?.reality?.name) {
-                this.changeSchema(target, criteria.context?.reality?.name);
-            }
+            this.changeSchemaFromContext(target, criteria.context);
             let updateCriteria = criteria;
             if (criteria instanceof PolarisCriteria) {
                 const { context } = criteria;
@@ -248,19 +235,22 @@ export class PolarisEntityManager extends EntityManager {
         });
     }
 
-    public changeSchema<Entity>(
+    public changeSchemaFromContext<Entity>(
         target: (new () => Entity) | Function | EntitySchema<Entity> | string,
-        schemaName: string,
+        context: PolarisGraphQLContext,
     ) {
-        const metadata = this.connection.getMetadata(target);
-        metadata.schemaPath = schemaName;
-        metadata.schemaPath = schemaName;
-        metadata.schema = schemaName;
-        metadata.tablePath = this.connection.driver.buildTableName(
-            metadata.tableName,
-            metadata.schema,
-            metadata.database,
-        );
+        if (context?.reality?.name) {
+            const metadata = this.connection.getMetadata(target);
+            const schemaName = context.reality.name;
+            metadata.schemaPath = schemaName;
+            metadata.schemaPath = schemaName;
+            metadata.schema = schemaName;
+            metadata.tablePath = this.connection.driver.buildTableName(
+                metadata.tableName,
+                metadata.schema,
+                metadata.database,
+            );
+        }
     }
 
     private async wrapTransaction(action: any) {

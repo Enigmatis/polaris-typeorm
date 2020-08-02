@@ -6,11 +6,9 @@ export class DataVersionHandler {
         context: PolarisGraphQLContext,
         connection: PolarisConnection,
     ) {
-        if (context?.reality?.name) {
-            connection.manager.changeSchema(DataVersion, context.reality.name);
-        }
         const extensions: PolarisExtensions = (context && context.returnedExtensions) || {};
         connection.logger.log('log', 'Started data version job when inserting/updating entity');
+        connection.manager.changeSchemaFromContext(DataVersion, context);
         const result: DataVersion | undefined = await connection.manager.findOne(DataVersion, {});
         if (!result) {
             if (extensions.globalDataVersion) {
@@ -19,12 +17,14 @@ export class DataVersionHandler {
                 );
             }
             connection.logger.log('log', 'no data version found');
+            connection.manager.changeSchemaFromContext(DataVersion, context);
             await connection.manager.save(DataVersion, new DataVersion(1));
             connection.logger.log('log', 'data version created');
             extensions.globalDataVersion = 1;
         } else {
             if (!extensions.globalDataVersion) {
                 connection.logger.log('log', 'context does not hold data version');
+                connection.manager.changeSchemaFromContext(DataVersion, context);
                 await connection.manager.increment(DataVersion, {}, 'value', 1);
                 const newResult: DataVersion | undefined = await connection.manager.findOne(
                     DataVersion,
