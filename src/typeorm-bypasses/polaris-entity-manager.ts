@@ -243,7 +243,6 @@ export class PolarisEntityManager extends EntityManager {
             const metadata = this.connection.getMetadata(target);
             const schemaName = context.reality.name;
             metadata.schemaPath = schemaName;
-            metadata.schemaPath = schemaName;
             metadata.schema = schemaName;
             metadata.tablePath = this.connection.driver.buildTableName(
                 metadata.tableName,
